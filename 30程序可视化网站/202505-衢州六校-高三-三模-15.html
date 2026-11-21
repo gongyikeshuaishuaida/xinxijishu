@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>202505-衢州六校-高三-三模-15｜超级计算机任务排队</title>
+<style>
+:root{
+  --bg:#f6f8fb; --card:#fff; --text:#1f2937; --muted:#6b7280; --border:#dbe2ea;
+  --accent:#2563eb; --accent-soft:#dbeafe; --green-soft:#dcfce7;
+  --orange:#ea580c; --orange-soft:#ffedd5; --purple-soft:#ede9fe;
+  --red:#dc2626; --red-soft:#fee2e2; --gray-soft:#f3f4f6;
+  --shadow:0 6px 20px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC",Arial,sans-serif;
+}
+.wrap{width:min(1500px,calc(100% - 24px));margin:12px auto 20px}
+.header,.panel{
+  background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);
+}
+.header{padding:14px 18px;margin-bottom:12px}
+.header-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.header h1{margin:0;font-size:25px;line-height:1.25}
+.controls{display:flex;flex-wrap:wrap;gap:8px;margin:0}
+button{
+  border:none;border-radius:10px;padding:10px 18px;font-size:15px;cursor:pointer;transition:.2s;
+}
+button.primary{background:var(--accent);color:white}
+button.secondary{background:white;border:1px solid var(--border);color:var(--text)}
+button:disabled{opacity:.45;cursor:not-allowed}
+
+.main-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:12px;align-items:start}
+.panel{padding:14px;min-width:0}
+.panel h2{margin:0 0 8px;font-size:18px}
+.panel h3{margin:12px 0 7px;font-size:15px}
+
+.event-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px;
+}
+.now-chip{
+  display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;
+  background:var(--accent-soft);color:#1d4ed8;font-weight:800;font-size:15px;
+}
+.now-dot{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+.event-box{
+  border-left:4px solid var(--accent);background:#f8fbff;border-radius:10px;padding:9px 12px;margin-bottom:10px;
+}
+.event-title{font-weight:700;margin-bottom:5px}
+.event-text{color:#334155;line-height:1.75;font-size:14px}
+
+.timeline-wrap{overflow-x:auto;padding:2px 0 8px}
+.timeline{
+  position:relative;min-width:880px;height:158px;border:1px solid var(--border);
+  border-radius:12px;background:#fbfdff;overflow:hidden;
+}
+.axis{
+  position:absolute;left:34px;right:34px;top:112px;height:2px;background:#94a3b8;
+}
+.tick-line{
+  position:absolute;top:108px;height:9px;width:1px;background:#94a3b8;
+}
+.tick{
+  position:absolute;top:126px;transform:translateX(-50%);font-size:12px;color:var(--muted);
+}
+.maintain-line{
+  position:absolute;top:14px;bottom:51px;border-left:3px dashed var(--red);
+}
+.maintain-label{
+  position:absolute;top:12px;transform:translateX(-50%);
+  background:var(--red-soft);color:var(--red);padding:3px 7px;border-radius:7px;font-size:12px;font-weight:700;
+}
+.now-line{
+  position:absolute;top:28px;bottom:51px;border-left:3px solid var(--accent);z-index:5;
+}
+.now-label{
+  position:absolute;top:31px;transform:translate(-50%,-100%);
+  background:var(--accent);color:#fff;padding:4px 8px;border-radius:7px;font-size:12px;font-weight:800;z-index:6;
+}
+.runbar{
+  position:absolute;top:61px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;color:#111827;border:1px solid rgba(0,0,0,.08);overflow:hidden;white-space:nowrap;
+}
+.runbar.active{outline:3px solid rgba(37,99,235,.23)}
+.runbar.invalid-run{
+  background:repeating-linear-gradient(45deg,#fee2e2,#fee2e2 8px,#fecaca 8px,#fecaca 16px)!important;
+  color:var(--red);
+}
+.timeline-note{
+  position:absolute;left:34px;top:18px;font-size:13px;color:var(--muted);
+}
+
+.queue{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-height:68px;padding:8px;
+  border:1px dashed var(--border);border-radius:12px;background:#fbfdff;
+}
+.queue-empty{color:var(--muted);font-size:14px}
+.q-card{
+  min-width:110px;border:2px solid #cbd5e1;border-radius:12px;padding:10px 12px;text-align:center;background:white;
+}
+.q-card:first-of-type{border-color:var(--orange);background:var(--orange-soft)}
+.q-card .name{font-size:22px;font-weight:800}
+.q-card .small{font-size:12px;color:var(--muted);margin-top:3px}
+.arrow{font-size:22px;color:#94a3b8}
+
+.task-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.task-card{border:1px solid var(--border);border-radius:12px;padding:8px;background:white;min-height:82px}
+.task-card.running{border:2px solid var(--accent);background:var(--accent-soft)}
+.task-card.waiting{border:2px dashed var(--orange);background:var(--orange-soft)}
+.task-card.done{background:var(--green-soft);border-color:#86efac}
+.task-card.invalid{background:var(--red-soft);border-color:#fecaca;opacity:.78}
+.task-card.future{opacity:.48;background:var(--gray-soft)}
+.task-name{font-size:20px;font-weight:800;margin-bottom:6px}
+.task-meta{font-size:13px;color:var(--muted);line-height:1.6}
+.status{margin-top:6px;display:inline-block;font-size:12px;padding:3px 7px;border-radius:999px;background:#e5e7eb}
+
+.code-title-row{display:flex;justify-content:space-between;gap:10px;align-items:end;margin-bottom:10px}
+.code-sub{font-size:13px;color:var(--muted)}
+.code-groups{display:flex;flex-direction:column;gap:8px}
+.code-group{
+  display:grid;grid-template-columns:minmax(0,1fr) 22px minmax(280px, .72fr);gap:10px;align-items:stretch;
+  border-radius:12px;padding:6px;border:1px solid transparent;transition:.2s;
+}
+.code-group.active{background:#eff6ff;border-color:#93c5fd}
+.codebox{
+  margin:0;padding:9px 10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:9px;
+  font-family:Consolas,"Courier New",monospace;font-size:12px;line-height:1.62;white-space:pre;overflow-x:auto;
+}
+.brace{
+  display:flex;align-items:center;justify-content:center;
+  font-family:Georgia,serif;font-size:54px;line-height:1;color:#94a3b8;transform:scaleY(1.25);
+}
+.code-group.active .brace{color:var(--accent)}
+.purpose{
+  display:flex;align-items:flex-start;padding:12px 14px;border-radius:9px;background:#fff;
+  border:1px solid var(--border);font-size:13px;line-height:1.9;color:#334155;
+}
+.code-group.active .purpose{border-color:#93c5fd;background:#fff}
+
+.rule-box{
+  background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:12px 14px;
+  line-height:1.75;font-size:14px;color:#334155;
+}
+.answer{font-size:34px;font-weight:900;letter-spacing:2px;color:var(--accent)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:var(--muted)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+
+@media(max-width:1100px){
+  .main-grid{grid-template-columns:1fr}
+}
+@media(max-width:800px){
+  .code-group{grid-template-columns:1fr}
+  .brace{display:none}
+  .purpose{margin-top:-2px}
+}
+@media(max-width:620px){
+  .wrap{width:min(100% - 18px,1500px);margin-top:10px}
+  .task-grid{grid-template-columns:1fr 1fr}
+  .header h1{font-size:22px}
+  .header-row{align-items:flex-start}
+}
+
+
+.reasoning-panel{margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:14px}
+.reasoning-panel h2{margin:0 0 10px;font-size:18px}
+.reasoning-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.reason-card{border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:#fbfdff;min-width:0}
+.reason-card.full{grid-column:1 / -1}
+.reason-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.reason-title{font-weight:800;font-size:15px}
+.reason-answer{font-family:Consolas,"Courier New",monospace;font-weight:800;color:#1d4ed8;background:var(--accent-soft);border-radius:8px;padding:4px 8px}
+.reason-steps{margin:0;padding-left:20px;color:#334155;font-size:13px;line-height:1.85}
+.reason-steps li+li{margin-top:3px}
+.reason-code{margin-top:8px;padding:8px 10px;border-radius:9px;background:#f8fafc;border:1px solid #e5e7eb;font-family:Consolas,"Courier New",monospace;font-size:12px;line-height:1.7;white-space:pre-wrap}
+.reason-key{color:#b45309;font-weight:800}
+@media(max-width:900px){.reasoning-grid{grid-template-columns:1fr}.reason-card.full{grid-column:auto}}
+
+
+/* Classroom controls and readable layout */
+.lesson-tools{position:sticky;top:0;z-index:30;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px;background:#fff;border:1px solid #ccd5e1;border-radius:12px;margin:10px 0}
+.lesson-tools button,.lesson-tools select{font:inherit;padding:8px 12px;border:1px solid #bac7d9;background:#fff;color:#20334e;border-radius:8px;min-height:40px;max-width:100%}
+.lesson-tools button:disabled{opacity:.4}
+.lesson-tools label{display:flex;gap:6px;align-items:center}
+.lesson-tools input{width:18px;height:18px}
+.lesson-tools button:focus-visible,.lesson-tools select:focus-visible{outline:3px solid #e6a323}
+.solution{display:block!important}
+.fill{font-size:inherit}.fill::before{display:none}
+body.reveal .fill{font-size:inherit}body.reveal .fill::before{display:none}
+body.large .code,body.large .codebox,body.large .code-line,body.large .line{font-size:16px!important}
+body.large .event-text,body.large .rule-box,body.large .callout,body.large .small,body.large .step-note,body.large .code-explain,body.large .hgt-row,body.large .hgt-head{font-size:18px!important}
+
+body.large .stage,body.large .main-grid,body.large .grid{grid-template-columns:minmax(0,1fr)!important}
+body.large .code-card{grid-column:auto}
+.table-scroll{overflow-x:auto;max-width:100%}
+.data-table{border-collapse:collapse;width:100%;font-size:15px}
+.data-table th,.data-table td{padding:8px;border:1px solid #d5dfeb;text-align:center}
+.data-table th{background:#eef3fa}.data-table .changed{background:#fff2cd}
+.state-code{margin:0;padding:12px;background:#152238;color:#e8f0ff;border-radius:12px;overflow:auto;max-height:540px;font:14px/1.65 Consolas,monospace}
+.state-code .line{display:block;white-space:pre;padding:2px 6px}.state-code .hi{background:#526080;color:white;border-radius:4px}
+body.large .state-code{font-size:16px}
+.state-note{padding:10px 12px;background:#edf4ff;border-left:4px solid #386cd2;line-height:1.7;margin:10px 0}
+.main-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.timeline-new{width:100%;height:auto;min-width:0}.queue{min-height:50px}@media(max-width:1000px){.main-grid{grid-template-columns:minmax(0,1fr)}}
+/* Compact, persistent classroom header */
+.classroom-header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:8px 10px;padding:10px 12px;margin:0 0 12px;background:#fff;border:1px solid #d5deeb;border-radius:12px;box-shadow:0 3px 14px #1c355012}
+.classroom-header h1{font-size:21px;margin:0;flex:0 0 auto}
+.classroom-header button,.classroom-header select{font:inherit;padding:7px 10px;border:1px solid #c8d3e3;border-radius:8px;background:#fff;color:#243954;min-height:38px;max-width:100%}
+.classroom-header button.primary{background:#2863ce;color:white}
+.classroom-header button:disabled{opacity:.4}
+.classroom-header label{display:flex;align-items:center;gap:5px;font-size:14px}
+.classroom-header #lessonLarge{margin-left:0}
+.classroom-header .header-controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.classroom-header .status,.classroom-header .progress{white-space:nowrap;font-size:14px}
+.classroom-header .header-note{flex-basis:100%;font-size:14px}
+
+.classroom-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);align-items:start}
+.variable-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.variable{border:1px solid #d8e3ef;border-radius:10px;padding:9px;background:#f5f8fc}
+.variable small{display:block;color:#62748b}.variable strong{display:block;font-size:18px;overflow-wrap:anywhere}.variable.changed{background:#fff2d0;border-color:#e7c371}
+.block-code{display:flex;flex-direction:column;gap:8px}
+.lesson-block{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(100px,.42fr);gap:7px;padding:7px;border:1px solid #e0e6ef;border-radius:10px;background:#f9fbfd}
+.lesson-block pre{margin:0;overflow-x:auto;font:13px/1.6 Consolas,monospace;white-space:pre}
+.lesson-block.active{background:#eaf2ff;border-color:#7ca7e9;box-shadow:inset 4px 0 #3a71c5}
+.block-brace{display:flex;align-items:center;justify-content:center;font:64px Georgia;color:#88a0bc}
+.block-purpose{display:flex;align-items:center;font-size:14px;line-height:1.7;color:#39516d}
+.lesson-block.active .block-brace{color:#3268b8}
+body.large .lesson-block pre{font-size:16px}
+body.large .classroom-grid{grid-template-columns:minmax(0,1fr)!important}
+@media(max-width:1050px){.classroom-grid{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+
+<header class="classroom-header">
+<h1>超级计算机任务排队</h1>
+<div class="header-controls"><button id="prevBtn">← 上一步</button><button id="nextBtn" class="primary">下一步 →</button><button id="resetBtn">重置</button><button id="endBtn">到最后</button><button id="autoBtn">自动播放</button><button id="lessonLarge" aria-pressed="false">大字模式</button></div>
+<label>案例 <select id="caseSelect"><option value="modified">E时长改为5</option><option value="original">原预约表</option><option value="sort">（2）排序与二分</option><option value="boundary">边界案例</option></select></label>
+<label>速度 <select id="speed"><option value="3000">慢</option><option value="1700" selected>正常</option><option value="700">快</option></select></label>
+<span id="progress" aria-live="polite"></span>
+</header>
+<div class="main-grid classroom-grid">
+<section class="panel">
+<h2 id="eventTitle"></h2><div id="eventText" class="state-note"></div>
+<h3>任务执行时间轴</h3><div id="timeline"></div>
+<h3>等待链表（头节点优先执行）</h3><div id="queue" class="queue"></div>
+<h3>变量变化 · 当前代码块执行后</h3><div id="vars" class="variable-grid"></div>
+<h3 id="structureTitle">所有任务状态</h3><div id="taskGrid"></div>
+</section>
+<section class="panel"><h2>代码分块与作用</h2><p class="small">每次推进一个分支或循环块；高亮块旁说明本块用途。</p><div id="code" class="block-code"></div></section>
+</div>
+  <section class="reasoning-panel solution">
+    <h2>③ 每一空是怎么推理得到的</h2>
+    <div class="reasoning-grid">
+      <div class="reason-card">
+        <div class="reason-head"><div class="reason-title">（2）① 加框处为什么执行 3 次</div><div class="reason-answer">3 次</div></div>
+        <ol class="reason-steps">
+          <li>加框处统计while内排序代码块的执行轮数，不是交换语句次数。</li>
+          <li>D 满足 <code>30+80=110&gt;100</code>，属于无效任务，会不断向后交换。</li>
+          <li>第一趟中：<b>D 和 E 交换 1 次</b>，随后 <b>D 和 F 再交换 1 次</b>。</li>
+          <li>此时局部次序变成 <code>... E F D</code>，但 E 的上传时刻 40 大于 F 的 30。</li>
+          <li>下一趟 <b>E 和 F 再交换 1 次</b>。</li>
+          <li>第三趟仍执行加框代码，交换0次，flag保持True，随后结束。</li><li>各轮交换2、1、0次，总计<b>3轮</b>；累计交换也恰好为3次，两者含义不同。</li>
+        </ol>
+      </div>
+      <div class="reason-card">
+        <div class="reason-head"><div class="reason-title">（2）② return 为什么填 i</div><div class="reason-answer">return i</div></div>
+        <ol class="reason-steps">
+          <li><code>retain</code> 前半部分已经把“能在 time 前完成的任务”放在前面，把无效任务放在后面。</li>
+          <li>后面的二分就是在找这两部分的分界位置。</li>
+          <li>若 <code>a[mid][1] + a[mid][2] &gt; time</code>，说明 mid 无效，要去左边找，因此 <code>j = mid - 1</code>。</li>
+          <li>否则 mid 有效，要继续向右找，因此 <code>i = mid + 1</code>。</li>
+          <li>循环结束后，<span class="reason-key">i 恰好指向第一个无效任务的位置</span>。</li>
+          <li>因为下标从 0 开始，所以“第一个无效任务的下标”正好等于“有效任务个数”。</li>
+        </ol>
+        <div class="reason-code">有效任务：0 ... i-1
+无效任务：i ... n-1
+所以返回有效任务数：return i</div>
+      </div>
+      <div class="reason-card">
+        <div class="reason-head"><div class="reason-title">（3）① 为什么是完成时刻</div><div class="reason-answer">now = a[i][1] + a[i][2]</div></div>
+        <ol class="reason-steps">
+          <li>进入这一分支的关键条件是 <code>h == -1</code>：当前没有等待任务。</li>
+          <li>同时 <code>a[i][1] &gt;= now</code>：下一个任务还没上传，或者恰好现在上传。</li>
+          <li>因此计算机可能需要先空等到 <code>a[i][1]</code> 时刻。</li>
+          <li>任务真正开始时刻是它的上传时刻，执行 <code>a[i][2]</code> 个时间单位。</li>
+          <li>所以新的 now 必须是：<span class="reason-key">上传时刻 + 所需时长</span>。</li>
+        </ol>
+        <div class="reason-code">开始时刻 = a[i][1]
+完成时刻 = a[i][1] + a[i][2]</div>
+      </div>
+      <div class="reason-card">
+        <div class="reason-head"><div class="reason-title">（3）② 为什么是 a[i][1] &lt;= now</div><div class="reason-answer">a[i][1] &lt;= now</div></div>
+        <ol class="reason-steps">
+          <li>这一整个 <code>elif</code> 分支的作用不是执行任务，而是：<span class="reason-key">把已经上传的任务加入等待链表</span>。</li>
+          <li>一个任务只要“上传时刻不晚于当前时刻 now”，就已经可以等待。</li>
+          <li>因此条件自然是 <code>a[i][1] &lt;= now</code>。</li>
+          <li><b>等号不能少</b>：例如 E 恰好在 A 完成的 <code>now=40</code> 时上传。</li>
+          <li>如果只写 <code>&lt;</code>，E 在 40 时刻就不会及时进入等待链表，后续选择顺序会出错。</li>
+        </ol>
+      </div>
+      <div class="reason-card full">
+        <div class="reason-head"><div class="reason-title">（3）③ 为什么是 a[i][3] = p</div><div class="reason-answer">a[i][3] = p</div></div>
+        <ol class="reason-steps">
+          <li>这里是在把新任务 <code>i</code> 插入一个按“所需时长升序”排列的单链表。</li>
+          <li>循环结束后：<code>q</code> 指向插入位置前一个结点，<code>p</code> 指向插入位置后一个结点。</li>
+          <li>原来的连接关系是：<code>q → p</code>。</li>
+          <li>插入 i 后要变成：<code>q → i → p</code>。</li>
+          <li>程序已经写了 <code>a[q][3] = i</code>，完成了 <b>q → i</b>。</li>
+          <li>还必须补上 <b>i → p</b>，所以：<code>a[i][3] = p</code>。</li>
+        </ol>
+        <div class="reason-code">插入前：q  →  p
+插入后：q  →  i  →  p
+
+已有：a[q][3] = i
+还缺：a[i][3] = p</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+
+const $=id=>document.getElementById(id),copy=x=>JSON.parse(JSON.stringify(x));
+const procLines=[
+'def proc(a, m):','    h = -1','    now = i = 0','    task = []','    while i < m or h != -1:',
+'        if i < m and a[i][1] >= now and h == -1:',
+'            now = a[i][1] + a[i][2]  # ①','            if now <= time:','                task.append(a[i][0])','            i += 1',
+'        elif i < m and a[i][1] <= now:  # ②','            if h == -1:','                h = i','            else:',
+'                if a[i][2] < a[h][2]:','                    a[i][3] = h','                    h = i','                else:',
+'                    q = p = h','                    while p != -1 and a[i][2] >= a[p][2]:',
+'                        q = p','                        p = a[p][3]','                    a[q][3] = i',
+'                    a[i][3] = p  # ③','            i += 1','        else:','            now += a[h][2]',
+'            if now <= time:','                task.append(a[h][0])','            h = a[h][3]',
+'            if now > time:','                break','    return task'];
+const retainLines=[
+'def retain(a, time):','    n = len(a)','    k = n','    flag = False','    while not flag:',
+'        flag = True  # 加框代码块开始','        c = 0','        for j in range(1, k):',
+'            if a[j-1][1]+a[j-1][2] > time or a[j-1][1] > a[j][1]:',
+'                a[j], a[j-1] = a[j-1], a[j]','                flag = False','                c = j',
+'        k = c  # 加框代码块结束','    i, j = 0, n-1','    while i <= j:','        mid = (i+j)//2',
+'        if a[mid][1]+a[mid][2] > time:','            j = mid-1','        else:','            i = mid+1',
+'    return i  # 有效任务数'];
+function retain(input,trace=false){
+ const a=copy(input),frames=[];let k=a.length,flag=false,round=0,total=0,roundSwaps=0;
+ const snap=(line,title,text,vars={})=>frames.push(copy({a,line,title,text,vars:{round,roundSwaps,total,k,flag,...vars},mode:'sort'}));
+ if(trace)snap(3,'排序初始化','第（2）问是另一组数据。round记录加框轮数，total记录交换次数。');
+ while(!flag){
+  round++;roundSwaps=0;flag=true;let c=0;
+  if(trace)snap(5,`第${round}轮开始`,'即使本轮没有交换，也已经执行了一轮加框代码。');
+  for(let j=1;j<k;j++){
+   const invalid=a[j-1][1]+a[j-1][2]>100,out=a[j-1][1]>a[j][1];
+   if(trace)snap(8,`第${round}轮，比较${j-1}与${j}`,`${a[j-1][0]}单独超时=${invalid}；上传逆序=${out}；或条件=${invalid||out}。`,{j});
+   if(invalid||out){
+    [a[j],a[j-1]]=[a[j-1],a[j]];roundSwaps++;total++;flag=false;c=j;
+    if(trace)snap(11,'交换及标记完成',`本轮交换${roundSwaps}次，累计${total}次；flag=False，c=${c}。`,{j,c});
+   }
+  }
+  k=c;if(trace)snap(12,`第${round}轮结束`,flag?'本轮0次交换，flag=True，排序结束。':'仍发生交换，继续下一轮。');
+ }
+ let i=0,j=a.length-1;if(trace)snap(13,'开始二分','有效任务位于前段，寻找第一个无效位置。',{i,j});
+ while(i<=j){
+  const mid=Math.floor((i+j)/2);
+  if(trace)snap(15,'计算中点',`mid=(${i}+${j})//2=${mid}。`,{i,j,mid});
+  const bad=a[mid][1]+a[mid][2]>100;if(bad)j=mid-1;else i=mid+1;
+  if(trace)snap(bad?17:19,'收缩区间',`${a[mid][0]}：${a[mid][1]}+${a[mid][2]} ${bad?'>':'≤'} 100，${bad?'j=mid-1':'i=mid+1'}。`,{i,j,mid});
+ }
+ if(trace)snap(20,'二分结束',`有效任务个数${i}；加框${round}轮，交换${total}次。`,{i,j});
+ return {a,m:i,frames};
+}
+function schedule(input){
+ const prepared=retain(input),a=prepared.a.map(r=>[...r,-1]),m=prepared.m;
+ let h=-1,i=0,now=0,p=-1,q=-1,task=[],segments=[],states=[];
+ const status=Object.fromEntries(a.map((r,k)=>[r[0],k<m?'未处理':'预先舍弃']));
+ const snap=(line,title,text)=>states.push(copy({a,h,i,now,p,q,m,task,segments,status,line,title,text,mode:'proc'}));
+ snap(3,'初始化完成','retain已筛选并排列有效任务。now是程序变量，不是实时播放的时钟。');
+ let guard=0;
+ while((i<m||h!==-1)&&guard++<200){
+  if(i<m&&a[i][1]>=now&&h===-1){
+   snap(5,'没有等待任务',`h=-1 且 ${a[i][1]}≥${now}，直接处理${a[i][0]}；允许空等。`);
+   const start=a[i][1];now=start+a[i][2];status[a[i][0]]='计算完成时刻';
+   segments.push({name:a[i][0],start,end:now,accepted:false});
+   snap(6,'① 完成时刻已计算',`now=${start}+${a[i][2]}=${now}，下一步判断是否计入task。`);
+   if(now<=100){task.push(a[i][0]);status[a[i][0]]='已计入结果';segments.at(-1).accepted=true;snap(8,'记录完成任务',`${now}≤100，追加${a[i][0]}。`);}
+   i++;snap(9,'处理下一条预约','i增加1，now不变。');
+  }else if(i<m&&a[i][1]<=now){
+   snap(10,'② 已上传任务入队',`${a[i][0]}上传时刻${a[i][1]}≤now=${now}，进入等待链表。`);
+   status[a[i][0]]='接链中';
+   if(h===-1){h=i;status[a[i][0]]='等待';snap(12,'空链设置表头',`h=${h}。`);}
+   else if(a[i][2]<a[h][2]){
+    a[i][3]=h;snap(15,'新任务先连接旧头',`${a[i][0]}.next=${h}；表头暂未改变。`);
+    h=i;status[a[i][0]]='等待';snap(16,'更新表头',`h=${h}。`);
+   }else{
+    q=p=h;snap(18,'寻找插入位置',`q=p=${h}。`);
+    while(p!==-1&&a[i][2]>=a[p][2]){
+     snap(19,'继续向后找',`${a[i][2]}≥${a[p][2]}，相同则排在已有任务后。`);
+     q=p;snap(20,'q记住当前节点',`q=${q}。`);
+     p=a[p][3];snap(21,'p移动到后继',`p=${p}${p===-1?'，已到链尾':''}。`);
+    }
+    a[q][3]=i;snap(22,'前驱连接新任务',`a[${q}][3]=${i}；后继尚待连接。`);
+    a[i][3]=p;status[a[i][0]]='等待';snap(23,'③ 新任务连接后继',`a[${i}][3]=${p}，接链完成。`);
+   }
+   i++;snap(24,'预约下标前进','i增加1，继续检查已上传任务。');
+  }else{
+   const target=h,start=now;now+=a[h][2];status[a[target][0]]='计算完成时刻';
+   segments.push({name:a[target][0],start,end:now,accepted:false});
+   snap(26,'计算队首完成时刻',`拟安排${a[target][0]}：${start}～${now}；尚未计入task。`);
+   if(now<=100){task.push(a[target][0]);status[a[target][0]]='已计入结果';segments.at(-1).accepted=true;snap(28,'计入任务安排',`${now}≤100，追加${a[target][0]}。`);}
+   else{status[a[target][0]]='调度后超时';snap(27,'不计入结果',`${now}>100，超出维护时刻；这是拟安排完成时刻。`);}
+   h=a[h][3];snap(29,'表头移动到后继',`h=${h}。`);
+   if(now>100){snap(31,'超时退出','执行break，超时任务不在task中。');break;}
+  }
+ }
+ snap(32,'返回任务安排',`task=${task.join('')||'空'}。`);return states;
+}
+const original=[['A',30,10],['B',70,65],['C',25,25],['D',30,35],['E',40,70],['F',0,30]];
+function buildRaw(key){
+ if(key==='sort')return retain([['A',0,30],['B',10,65],['C',15,25],['D',30,80],['E',40,5],['F',30,10]],true).frames;
+ if(key==='boundary')return schedule([['A',10,10],['B',20,20],['C',20,60]]);
+ const a=copy(original);if(key==='modified')a.find(r=>r[0]==='E')[2]=5;return schedule(a);
+}
+
+function build(key){
+ const raw=buildRaw(key),frames=[];
+ raw.forEach((s,n)=>{
+   if(s.mode==='sort'){
+     if(![3,12,17,19,20].includes(s.line))return;
+     frames.push({...s,block:s.line===3?'init':s.line===12?'sort':s.line===20?'result':'binary'});
+   }else{
+     if(![3,9,24,29,32].includes(s.line))return;
+     if(s.line===29&&s.now>100)return;
+     let block=s.line===3?'init':s.line===9?'idle':s.line===29?'run':s.line===32?'result':'insert';
+     if(s.line===24){
+       const previous=raw[n-1].line;
+       block=previous===12?'empty':previous===16?'head':'insert';
+     }
+     if(s.line===32&&raw[n-1]?.line===31)block='run';
+     const label={init:'初始化',idle:'空闲时直接安排任务',empty:'已上传任务加入空链',head:'新任务插入链表头',insert:'遍历并插入等待链表',run:'处理队首任务',result:'返回结果'}[block];
+     frames.push({...s,block,title:label,text:block==='run'?(s.now>100?'拟安排超过100，不加入task；移走队首并结束。':'计算队首完成时刻，加入task，再移动表头。'):block==='idle'?'等待最早上传的任务，计算完成时刻，记录结果并推进i。':block==='empty'||block==='head'||block==='insert'?'完成一次入队处理并推进i；链表按时长递增排列。':s.text});
+   }
+ });
+ return frames;
+}
+let states=build('modified'),index=0,timer=null;
+const esc=x=>String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function render(){
+ const s=states[index],prev=index?states[index-1]:null,sort=s.mode==='sort';
+ $('eventTitle').textContent=s.title;$('eventText').textContent=s.text;
+ $('progress').textContent=`${index+1} / ${states.length} 块`;
+ $('prevBtn').disabled=index===0;$('nextBtn').disabled=index===states.length-1;
+ const vars=sort?s.vars:{now:s.now,i:s.i,h:s.h,p:s.p,q:s.q,task:s.task.join('')||'空'};
+ const old=prev?(sort?prev.vars:{...prev,task:prev.task.join('')||'空'}):{};
+ $('vars').innerHTML=Object.entries(vars).map(([k,v])=>`<div class="variable ${old[k]!==undefined&&old[k]!==v?'changed':''}"><small>${k}</small><strong>${old[k]!==undefined&&old[k]!==v?esc(old[k])+' → ':''}${esc(v)}</strong></div>`).join('');
+ const colors={F:'#c9ddff',A:'#c8ecd9',E:'#dfd2fa',C:'#ffdfb5',D:'#f5cdcf',B:'#e1e5ed'};
+ let at=s.h,seen=new Set(),chain=[];
+ if(!sort)while(at!==-1&&at!==undefined&&!seen.has(at)){seen.add(at);chain.push({r:s.a[at],id:at});at=s.a[at][3];}
+ $('queue').innerHTML=sort?'<span>每次推进一轮排序或一次二分区间收缩。</span>':chain.length?chain.map(({r,id},i)=>`${i?'<span class="arrow">→</span>':''}<div class="q-card" style="background:${colors[r[0]]||'#e6efff'}"><div class="name">${r[0]}</div><div>时长 ${r[2]}</div><div class="small">${i===0?'h · ':''}下标${id} · next=${r[3]}</div></div>`).join('')+'<span class="arrow">→</span><span>-1</span>':'<span class="queue-empty">h = -1，等待链表为空</span>';
+ $('structureTitle').textContent=sort?'当前数组顺序（第2问独立数据）':'所有任务状态';
+ $('taskGrid').innerHTML=sort?'<div class="table-scroll"><table class="data-table"><tr><th>下标</th><th>项目</th><th>上传</th><th>时长</th><th>单独能完成</th></tr>'+s.a.map((r,k)=>`<tr><td>${k}</td><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[1]+r[2]<=100?'是':'否'}</td></tr>`).join('')+'</table></div>':'<div class="task-grid">'+s.a.map((r,k)=>`<div class="task-card" style="border-top:5px solid ${colors[r[0]]||'#adc8ed'};background:${s.status[r[0]]==='调度后超时'?'#fff0f0':'#fff'}"><div class="task-name">${r[0]} <small style="font-size:13px;color:#64748b">下标${k}</small></div><div class="task-meta">上传 ${r[1]} · 时长 ${r[2]}<br>next=${r[3]}</div><span class="status">${s.status[r[0]]}</span></div>`).join('')+'</div>';
+ if(sort)$('timeline').innerHTML='<div class="state-note">排序每步是一整轮：最后的无交换轮也计数。二分每步完成一次区间收缩。</div>';
+ else{
+  const x=t=>40+t*7.5;
+  $('timeline').innerHTML=`<svg class="timeline-new" viewBox="0 0 860 150" role="img" aria-label="任务时间轴"><rect x="15" y="30" width="825" height="82" rx="12" fill="#f3f7fd"/><line x1="40" y1="111" x2="830" y2="111" stroke="#97a8bd"/>${[0,20,40,60,80,100,105].map(t=>`<text x="${x(t)}" y="${t===105?148:132}" text-anchor="middle" font-size="16" fill="#64748b">${t}</text>`).join('')}${s.segments.map(r=>`<rect x="${x(r.start)}" y="55" width="${(r.end-r.start)*7.5}" height="40" rx="6" fill="${colors[r.name]||'#d2e2fb'}" stroke="${r.end>100?'#ce5662':'#91a9c6'}"/><text x="${x((r.start+r.end)/2)}" y="80" text-anchor="middle" font-size="18" font-weight="700">${r.name}</text>`).join('')}<line x1="${x(100)}" x2="${x(100)}" y1="32" y2="114" stroke="#c64553" stroke-width="2" stroke-dasharray="5 4"/><text x="40" y="21" font-size="16" fill="#3a5375">程序 now=${s.now}${s.now>100?'（超时拟安排）':''}；红线 time=100</text></svg>`;
+ }
+ const blocks=sort?[
+ ['init',0,3,'初始化数组长度、扫描边界和标记。'],
+ ['sort',4,12,'一整轮冒泡式处理：无效任务后移，更新flag与k。'],
+ ['binary',13,19,'按有效／无效分界收缩二分区间。'],
+ ['result',20,20,'i就是有效任务个数。']
+ ]:[
+ ['init',0,4,'初始化表头、时刻和结果；进入主循环。'],
+ ['idle',5,9,'没有等待任务：等上传、计算完成时刻、加入结果。'],
+ ['empty',10,13,'已上传且等待链表为空：设置表头。'],
+ ['head',14,17,'新任务更短：先连旧头，再改表头。'],
+ ['insert',18,24,'遍历找到q、p；接入新节点并推进i。'],
+ ['run',25,31,'处理队首：计算时刻、判断超时、移动表头。'],
+ ['result',32,32,'返回已完成的任务顺序。']
+ ];
+ const lines=sort?retainLines:procLines;
+ $('code').innerHTML=blocks.map(([key,a,b,note])=>`<div class="lesson-block ${key===s.block?'active':''}"><pre>${lines.slice(a,b+1).map(esc).join('\n')}</pre><div class="block-brace" aria-hidden="true">}</div><div class="block-purpose">${note}</div></div>`).join('');
+}
+function stop(){if(timer!==null)clearInterval(timer);timer=null;$('autoBtn').textContent='自动播放';}
+function move(delta){stop();index=Math.max(0,Math.min(states.length-1,index+delta));render();}
+$('prevBtn').onclick=()=>move(-1);$('nextBtn').onclick=()=>move(1);
+$('resetBtn').onclick=()=>{stop();index=0;render();};$('endBtn').onclick=()=>{stop();index=states.length-1;render();};
+$('caseSelect').onchange=()=>{stop();states=build($('caseSelect').value);index=0;render();};
+$('speed').onchange=stop;
+$('autoBtn').onclick=()=>{if(timer!==null){stop();return;}if(index===states.length-1){index=0;render();}$('autoBtn').textContent='暂停播放';timer=setInterval(()=>{if(index<states.length-1){index++;render();}if(index===states.length-1)stop();},Number($('speed').value));};
+document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea,select,button'))return;if(e.key==='ArrowRight'){e.preventDefault();move(1);}if(e.key==='ArrowLeft'){e.preventDefault();move(-1);}});
+render();
+
+
+document.getElementById('lessonLarge').addEventListener('click',function(){
+ const on=document.body.classList.toggle('large');this.textContent=on?'标准字号':'大字模式';this.setAttribute('aria-pressed',String(on));
+});
+
+</script>
+</body>
+</html>

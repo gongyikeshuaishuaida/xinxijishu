@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>202511-湖丽衢-高三-一模-15｜共享电动车可视化</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#fff; --text:#1f2937; --muted:#667085; --line:#d9dee7;
+  --blue:#2563eb; --blue2:#eaf1ff; --green:#16805b; --green2:#e9f7f1;
+  --orange:#c66b00; --orange2:#fff2df; --red:#c13f3f; --red2:#fff0ef;
+  --purple:#7254c5; --purple2:#f1edff; --dark:#293241;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC","Noto Sans CJK SC",Arial,sans-serif;
+  line-height:1.55;
+}
+.page{max-width:1450px;margin:0 auto;padding:20px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+h1{margin:0;font-size:26px}
+.title-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.tabs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+button{
+  border:1px solid #cfd6e0;background:#fff;color:#263445;border-radius:10px;
+  min-height:42px;padding:8px 13px;font-size:15px;font-weight:700;cursor:pointer
+}
+button:hover{background:#fafbfc;border-color:#aeb8c7}
+button.active,button.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+button:disabled{opacity:.42;cursor:not-allowed}
+.status{color:var(--muted);font-size:14px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(360px,.88fr);gap:15px;align-items:start}
+.panel{
+  background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:17px;
+  box-shadow:0 7px 22px rgba(15,23,42,.055); min-width:0
+}
+.panel h2{margin:0 0 8px;font-size:20px}.panel h3{margin:13px 0 8px;font-size:16px}
+.small{font-size:13px;color:var(--muted)} .muted{color:var(--muted)}
+.scene{min-height:455px}
+.explain{min-height:455px}
+.step-title{font-size:19px;font-weight:800;margin-bottom:5px}
+.callout{border-left:4px solid var(--blue);background:#f7faff;border-radius:8px;padding:10px 12px;margin:10px 0}
+.callout.green{border-left-color:var(--green);background:var(--green2)}
+.callout.orange{border-left-color:var(--orange);background:var(--orange2)}
+.callout.purple{border-left-color:var(--purple);background:var(--purple2)}
+.station-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.station{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fbfcfe}
+.station-title{font-weight:800;margin-bottom:9px;display:flex;justify-content:space-between;gap:8px}
+.cars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.car{
+  border:1px solid #d8dee8;background:#fff;border-radius:12px;padding:10px;position:relative;
+  transition:.2s ease; min-width:0
+}
+.car .id{font-weight:900;font-size:18px}.battery{height:8px;background:#edf0f4;border-radius:999px;overflow:hidden;margin-top:7px}
+.battery span{display:block;height:100%;background:var(--green);border-radius:999px}
+.car.borrowed{opacity:.35;filter:grayscale(.5)}
+.car.returned{border-color:#cfb3ff;background:#fbf9ff}
+.car.winner{border:2px solid var(--blue);background:var(--blue2);transform:translateY(-2px)}
+.car.tie{border-color:#e9a23b;background:#fff9ed}
+.badge{display:inline-block;margin-top:6px;padding:2px 6px;border-radius:999px;font-size:12px;font-weight:700}
+.badge.old{background:#e8eefb;color:#264a8a}.badge.new{background:#f4ecff;color:#6744ac}
+.timeline{display:flex;align-items:center;gap:7px;overflow-x:auto;padding:8px 2px}
+.titem{white-space:nowrap;border:1px solid var(--line);background:#fff;padding:7px 9px;border-radius:9px;font-size:13px}
+.titem.done{background:#eef6ff;border-color:#b9cff6;color:#24529a;font-weight:700}
+.arrow{color:#9aa4b2;font-weight:900}
+.rank-list{display:grid;gap:8px;margin-top:9px}
+.rank-row{display:grid;grid-template-columns:58px 1fr 120px;gap:8px;align-items:center}
+.powerbar{height:20px;border-radius:999px;background:#edf0f5;overflow:hidden;position:relative}
+.powerbar span{position:absolute;left:0;top:0;bottom:0;background:#79a8ff;border-radius:999px}
+.powerbar em{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:12px;font-weight:800}
+.codebox{
+  font-family:Consolas,"Courier New",monospace;background:#121923;color:#e5edf7;
+  border-radius:13px;padding:13px;overflow-x:auto;font-size:13.5px;line-height:1.52
+}
+.codebox .line{
+  display:block;
+  white-space:pre;
+  min-height:1.52em;
+  padding:0 8px;
+  margin:0 -8px;
+  border-left:3px solid transparent;
+}
+.codebox .line.hi{
+  background:#293957;
+  border-left-color:#77a7ff;
+}
+.codebox .ans{color:#ffd166;font-weight:800}
+.pointer-demo{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+.node{min-width:122px;border:2px solid #aeb8c7;background:#fff;border-radius:12px;text-align:center;padding:10px}
+.node strong{display:block;font-size:18px}.node.new{border-color:var(--purple);background:var(--purple2)}
+.ptr{padding:6px 9px;border-radius:9px;background:#eef2f7;font-family:Consolas,monospace;font-weight:800}
+.big-arrow{font-size:28px;color:#758195}
+.chain{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:12px 0}
+.chain .node{min-width:92px;padding:8px}
+.chain .head{border-color:var(--blue);background:var(--blue2)}
+.chain .scan{border-color:var(--orange);background:var(--orange2)}
+.chain .insert{border-color:var(--purple);background:var(--purple2)}
+.cond{font-family:Consolas,monospace;border:1px solid #d4d9e2;background:#f8fafc;border-radius:10px;padding:8px 10px;font-weight:800}
+.cond .yes{color:var(--green)} .cond .no{color:var(--red)}
+.logic-table{width:100%;border-collapse:collapse;font-size:14px;margin-top:9px}
+.logic-table th,.logic-table td{border-bottom:1px solid #e7eaf0;padding:8px;text-align:left;vertical-align:top}
+.logic-table th{background:#fafbfc}
+.bottom{margin-top:16px}
+.derive-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.derive{
+  border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px;min-width:0
+}
+.derive h3{margin:0 0 8px;font-size:16px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.flowbox{border:1px solid #cad2df;background:#f9fafc;border-radius:10px;padding:8px 10px;font-weight:750}
+.flowbox.blue{border-color:#9ebaf0;background:var(--blue2)}
+.flowbox.green{border-color:#99d1bb;background:var(--green2)}
+.flowbox.orange{border-color:#efc58c;background:var(--orange2)}
+.flowbox.purple{border-color:#c6b6ef;background:var(--purple2)}
+.mini-chain{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.mini{border:1px solid #cbd3df;border-radius:9px;background:#fff;padding:6px 8px;font-size:13px;font-weight:800}
+.mini.new{background:var(--purple2);border-color:#b8a5ea}
+.formula{font-family:Consolas,monospace;font-weight:900;font-size:15px;padding:6px 9px;border-radius:8px;background:#f3f6fa;display:inline-block}
+.hidden{display:none!important}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.dot.b{background:#79a8ff}.dot.o{background:#e9a23b}.dot.p{background:#9a7be0}
+.footer-note{font-size:13px;color:var(--muted);margin-top:8px}
+@media(max-width:980px){
+  .grid{grid-template-columns:1fr}.scene,.explain{min-height:auto}
+  .derive-grid{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .page{padding:12px}.station-grid{grid-template-columns:1fr}.cars{grid-template-columns:1fr 1fr}
+  .rank-row{grid-template-columns:52px 1fr 90px}
+  .topbar{align-items:flex-start}
+  .title-actions{width:100%;justify-content:flex-start}
+  h1{font-size:22px}
+}
+
+/* Classroom controls and readable layout */
+.lesson-tools{position:sticky;top:0;z-index:30;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px;background:#fff;border:1px solid #ccd5e1;border-radius:12px;margin:10px 0}
+.lesson-tools button,.lesson-tools select{font:inherit;padding:8px 12px;border:1px solid #bac7d9;background:#fff;color:#20334e;border-radius:8px;min-height:40px;max-width:100%}
+.lesson-tools button:disabled{opacity:.4}
+.lesson-tools label{display:flex;gap:6px;align-items:center}
+.lesson-tools input{width:18px;height:18px}
+.lesson-tools button:focus-visible,.lesson-tools select:focus-visible{outline:3px solid #e6a323}
+.solution{display:block!important}
+.fill{font-size:inherit}.fill::before{display:none}
+body.reveal .fill{font-size:inherit}body.reveal .fill::before{display:none}
+body.large .code,body.large .codebox,body.large .code-line,body.large .line{font-size:16px!important}
+body.large .event-text,body.large .rule-box,body.large .callout,body.large .small,body.large .step-note,body.large .code-explain,body.large .hgt-row,body.large .hgt-head{font-size:18px!important}
+
+body.large .stage,body.large .main-grid,body.large .grid{grid-template-columns:minmax(0,1fr)!important}
+body.large .code-card{grid-column:auto}
+.table-scroll{overflow-x:auto;max-width:100%}
+.data-table{border-collapse:collapse;width:100%;font-size:15px}
+.data-table th,.data-table td{padding:8px;border:1px solid #d5dfeb;text-align:center}
+.data-table th{background:#eef3fa}.data-table .changed{background:#fff2cd}
+.state-code{margin:0;padding:12px;background:#152238;color:#e8f0ff;border-radius:12px;overflow:auto;max-height:540px;font:14px/1.65 Consolas,monospace}
+.state-code .line{display:block;white-space:pre;padding:2px 6px}.state-code .hi{background:#526080;color:white;border-radius:4px}
+body.large .state-code{font-size:16px}
+.state-note{padding:10px 12px;background:#edf4ff;border-left:4px solid #386cd2;line-height:1.7;margin:10px 0}
+.chain,.pointer-demo{flex-wrap:wrap}.codebox{max-height:580px}.grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.ans.fill{background:transparent}.q3-picker{max-width:100%;font:inherit;padding:8px}@media(max-width:1000px){.grid{grid-template-columns:minmax(0,1fr)}}
+/* Compact, persistent classroom header */
+.classroom-header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:8px 10px;padding:10px 12px;margin:0 0 12px;background:#fff;border:1px solid #d5deeb;border-radius:12px;box-shadow:0 3px 14px #1c355012}
+.classroom-header h1{font-size:21px;margin:0;flex:0 0 auto}
+.classroom-header button,.classroom-header select{font:inherit;padding:7px 10px;border:1px solid #c8d3e3;border-radius:8px;background:#fff;color:#243954;min-height:38px;max-width:100%}
+.classroom-header button.primary{background:#2863ce;color:white}
+.classroom-header button:disabled{opacity:.4}
+.classroom-header label{display:flex;align-items:center;gap:5px;font-size:14px}
+.classroom-header #lessonLarge{margin-left:0}
+.classroom-header .header-controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.classroom-header .status,.classroom-header .progress{white-space:nowrap;font-size:14px}
+.classroom-header .header-note{flex-basis:100%;font-size:14px}
+
+.classroom-header .tabs{margin:0;padding:0}
+#q2-visual{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.q2-stage{border:1px solid #d9e2ee;border-radius:10px;padding:10px;background:#fafcff;min-width:0}
+.q2-stage.current{background:#edf4ff;border-color:#81a8dc;box-shadow:inset 4px 0 #3b70bc}
+.q2-stage.complete{background:#f1f8f3}.q2-stage h3{font-size:15px;margin-top:0}
+.q2-stage .mini-chain{flex-wrap:wrap}.q2-stage .node{min-width:0;padding:8px}.q2-stage .big-arrow{font-size:20px}
+#q2-code,#q3-code{background:transparent;border:0;padding:0;max-height:none;overflow:visible}
+.bike-code-block{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(100px,.4fr);gap:7px;padding:7px;margin-bottom:8px;border:1px solid #d8e1ed;border-radius:10px;background:#f7faff}
+.bike-code-block pre{margin:0;overflow-x:auto;white-space:pre;font:13px/1.6 Consolas,monospace;color:#243752}
+.bike-code-block.active{background:#eaf2ff;border-color:#80a7e0;box-shadow:inset 4px 0 #3b70bd}
+.block-brace{display:flex;align-items:center;justify-content:center;font:64px Georgia;color:#7897bb}.block-purpose{display:flex;align-items:center;font-size:14px;line-height:1.7;color:#3d536c}
+body.large .bike-code-block pre{font-size:16px}
+@media(max-width:600px){#q2-visual{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="page">
+<header class="classroom-header"><h1>共享电动车</h1>
+<div class="header-controls"><button id="prev">← 上一步</button><button id="next" class="primary">下一步 →</button><button id="reset">重置</button><button id="q3End">到最后</button><button id="lessonLarge" aria-pressed="false">大字模式</button></div>
+<span class="status" id="status">步骤 1 / 6</span>
+<div class="header-controls tabs"><button class="tab active" data-tab="q1">（1）借哪辆车</button><button class="tab" data-tab="q2">（2）classfiy</button><button class="tab" data-tab="q3">（3）借还车</button></div>
+<label>借还案例 <select id="q3Case" class="q3-picker"><option value="middle">中插</option><option value="head">头插</option><option value="tail">尾插</option><option value="empty">归还空站</option><option value="ties">同电量旧车</option><option value="low19">19换电</option><option value="edge20">20不换电</option><option value="borrowEmpty">空站借车</option><option value="borrowOne">借走唯一车</option><option value="borrowHead">借走头车</option></select></label>
+</header>
+  <section id="q1" class="tabsec">
+    <div class="grid">
+      <div class="panel scene">
+        <div class="step-title" id="q1-title"></div>
+        <div class="timeline" id="q1-timeline"></div>
+        <div class="station-grid" id="q1-stations"></div>
+        <div id="q1-rank"></div>
+      </div>
+      <div class="panel explain">
+        <h2>当前一步在判断什么？</h2>
+        <div id="q1-explain"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="q2" class="tabsec hidden">
+    <div class="grid">
+      <div class="panel scene">
+        <div class="step-title" id="q2-title"></div>
+        <div id="q2-visual"></div>
+      </div>
+      <div class="panel explain">
+        <h2>头插概览 · 对应代码</h2>
+        <p>本页为头插原理示意；具体数值和边界执行过程见第（3）问。</p>
+        <div class="codebox" id="q2-code"></div>
+        <div id="q2-explain"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="q3" class="tabsec hidden">
+    <div class="grid">
+      <div class="panel scene">
+        <div class="step-title" id="q3-title"></div>
+        <div id="q3-visual"></div>
+      </div>
+      <div class="panel explain">
+        <h2>原题代码｜按块运行</h2>
+        <div class="codebox" id="q3-code"></div>
+        <div id="q3-explain"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="bottom panel solution">
+    <h2>每一空怎么得到</h2>
+    <div class="derive-grid">
+      <div class="derive">
+        <h3>（2）为什么是 <span class="formula">data[i][2] = pr[num]</span></h3>
+        <div class="flow">
+          <span class="flowbox blue">原头结点 pr[num]</span><span class="big-arrow">→</span><span class="mini">旧车 A</span>
+        </div>
+        <div class="flow">
+          <span class="mini new">新车 i</span><span class="big-arrow">→</span><span class="mini">旧车 A</span>
+        </div>
+        <div class="flow">
+          <span class="flowbox purple">新车 i 的 next</span><span>等于</span><span class="flowbox blue">原来的 pr[num]</span>
+        </div>
+        <div class="small">再执行 <b>pr[num] = i</b>，新车 i 就成为新的头结点。</div>
+      </div>
+
+      <div class="derive">
+        <h3>① 借走头车后，头指针怎么动？</h3>
+        <div class="mini-chain">
+          <span class="flowbox blue">pr[loc]</span><span class="big-arrow">→</span>
+          <span class="mini new">被借走</span><span class="big-arrow">→</span>
+          <span class="mini">下一辆</span><span class="big-arrow">→</span><span class="mini">...</span>
+        </div>
+        <div class="flow">
+          <span class="flowbox orange">删掉头车</span><span>完成后</span>
+          <span class="flowbox blue">pr[loc]</span><span class="big-arrow">→</span><span class="mini">下一辆</span>
+        </div>
+        <div class="formula">pr[loc] = data[pr[loc]][2]</div>
+      </div>
+
+      <div class="derive">
+        <h3>② 为什么循环条件要写 <span class="formula">&gt;=</span>？</h3>
+        <div class="small">假设还回来的车电量 = 80，它是“刚刚归还”的，闲置时间最短。</div>
+        <div class="mini-chain" style="margin-top:9px">
+          <span class="mini">95</span><span class="big-arrow">→</span>
+          <span class="mini">80（早就在）</span><span class="big-arrow">→</span>
+          <span class="mini">80（早就在）</span><span class="big-arrow">→</span>
+          <span class="mini new">80（刚归还）</span><span class="big-arrow">→</span>
+          <span class="mini">73</span>
+        </div>
+        <div class="flow">
+          <span class="flowbox orange">现有车电量 ≥ 新车电量</span><span class="big-arrow">⇒</span>
+          <span class="flowbox green">继续向后走</span>
+        </div>
+        <div class="formula">p != -1 and data[p][1] &gt;= data[vel][1]</div>
+        <div class="small">“=”必须保留：相同电量时，让闲置更久的旧车排在刚归还的新车前面。</div>
+      </div>
+
+      <div class="derive">
+        <h3>③ 非头插示例：新车的 next 指向谁？</h3>
+        <div class="mini-chain">
+          <span class="mini">q</span><span class="big-arrow">→</span>
+          <span class="mini">p</span>
+        </div>
+        <div class="flow">
+          <span class="flowbox purple">插入 vel</span>
+        </div>
+        <div class="mini-chain">
+          <span class="mini">q</span><span class="big-arrow">→</span>
+          <span class="mini new">vel</span><span class="big-arrow">→</span>
+          <span class="mini">p</span>
+        </div>
+        <div class="flow">
+          <span class="formula">data[q][2] = vel</span>
+          <span class="formula">data[vel][2] = p</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer-note">页面下方这四块就是“空格推导图”：先看箭头关系，再看对应代码，不需要先记链表模板。注意：上面的q→vel只适用于非头插；空链或头插时更新pr[loc]，最后都执行data[vel][2]=p。</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const tabs=[...document.querySelectorAll('.tab')];
+  const secs=[...document.querySelectorAll('.tabsec')];
+  const status=document.getElementById('status');
+  const prev=document.getElementById('prev'), next=document.getElementById('next'), reset=document.getElementById('reset');
+  let active='q1';
+  let idx={q1:0,q2:0,q3:0};
+
+  const initial={
+    2:[{id:1,p:44},{id:4,p:97},{id:2,p:34},{id:7,p:65}],
+    3:[{id:3,p:27},{id:8,p:73},{id:6,p:100},{id:9,p:80}]
+  };
+
+  const q1Steps=[
+    {title:'先看“初始停放情况”', event:'图 a：初始车辆', note:'图 a 是记录发生前的停放状态。后面按图 b 的 4 条记录依次更新。'},
+    {title:'记录 1：2 号点借出 4 号车', event:'借：2号点 → 4号车', note:'4 号车从 2 号停靠点离开。'},
+    {title:'记录 2：3 号点借出 6 号车', event:'借：3号点 → 6号车', note:'6 号车从 3 号停靠点离开。'},
+    {title:'记录 3：4 号车还到 3 号点，电量 80', event:'还：4号车 → 3号点（80）', note:'4 号车加入 3 号点，并且它是“刚归还”的。'},
+    {title:'记录 4：6 号车还到 3 号点，电量 77', event:'还：6号车 → 3号点（77）', note:'6 号车回到 3 号点，此时电量已不是初始的 100，而是 77。'},
+    {title:'现在用户在 3 号点借车：先比电量，再比闲置时间', event:'选择要借出的车', note:'最高电量是 80：4 号和 9 号并列。9 号车从一开始就停着，4 号车刚归还，所以 9 号闲置更久。答案是 9。'}
+  ];
+
+  function stateQ1(step){
+    let s={2:initial[2].map(x=>({...x,tag:'old'})),3:initial[3].map(x=>({...x,tag:'old'}))};
+    if(step>=1) s[2]=s[2].filter(x=>x.id!==4);
+    if(step>=2) s[3]=s[3].filter(x=>x.id!==6);
+    if(step>=3) s[3].push({id:4,p:80,tag:'new4'});
+    if(step>=4) s[3].push({id:6,p:77,tag:'new6'});
+    return s;
+  }
+  function carHTML(c,step){
+    let cls='car';
+    if(step===5 && c.p===80) cls+=' tie';
+    if(step===5 && c.id===9) cls+=' winner';
+    let badge='';
+    if(c.tag==='old') badge='<span class="badge old">原来就在</span>';
+    if(c.tag==='new4'||c.tag==='new6') badge='<span class="badge new">后来归还</span>';
+    return `<div class="${cls}">
+      <div class="id">${c.id} 号车</div>
+      <div>剩余电量 <b>${c.p}</b></div>
+      <div class="battery"><span style="width:${c.p}%"></span></div>${badge}
+    </div>`;
+  }
+  function renderQ1(){
+    const step=idx.q1, st=q1Steps[step], s=stateQ1(step);
+    document.getElementById('q1-title').textContent=st.title;
+    document.getElementById('q1-timeline').innerHTML=q1Steps.map((x,i)=>
+      `<span class="titem ${i<=step?'done':''}">${i===0?'初始':i+'. '+x.event}</span>${i<q1Steps.length-1?'<span class="arrow">→</span>':''}`
+    ).join('');
+    document.getElementById('q1-stations').innerHTML=[2,3].map(no=>`
+      <div class="station">
+        <div class="station-title"><span>${no} 号停靠点 · 当前停放车辆（非链表顺序）</span><span class="small">${s[no].length} 辆</span></div>
+        <div class="cars">${s[no].map(c=>carHTML(c,step)).join('')}</div>
+      </div>`).join('');
+    let rank='';
+    if(step===5){
+      const arr=s[3].slice().sort((a,b)=>b.p-a.p);
+      rank=`<h3>先按电量找最大值</h3><div class="rank-list">${
+        arr.map(c=>`<div class="rank-row">
+          <b>${c.id}号</b>
+          <div class="powerbar"><span style="width:${c.p}%"></span><em>${c.p}</em></div>
+          <span>${c.p===80?(c.id===9?'一直停放 → 更久':'刚归还 → 更短'):''}</span>
+        </div>`).join('')
+      }</div>`;
+    }
+    document.getElementById('q1-rank').innerHTML=rank;
+    let extra = step===5 ? `
+      <div class="callout orange"><b>80 = 80</b>，进入第二层比较：闲置时间。</div>
+      <div class="pointer-demo">
+        <div class="node"><strong>9 号</strong>初始就在 3 号点<br><span class="badge old">闲置更久</span></div>
+        <div class="big-arrow">VS</div>
+        <div class="node new"><strong>4 号</strong>记录 3 才归还<br><span class="badge new">闲置更短</span></div>
+      </div>
+      <div class="callout green"><b>所以选择 9 号车。</b></div>` : '';
+    document.getElementById('q1-explain').innerHTML=`<div class="callout">${st.note}</div>${extra}`;
+  }
+
+  const q2Steps=[
+    {title:'① pr 保存“每个停靠点的链表头”'},
+    {title:'② 当前处理车辆 i，先找到它所属的停靠点 num'},
+    {title:'③ 如果这个停靠点已经有车：让新车 i 指向原头结点'},
+    {title:'④ 再把 pr[num] 改成 i，新车成为新的头结点'}
+  ];
+function q2Visual(step){
+ const diagrams=[
+ '<p><code>pr[num]</code> 保存该站的链表头下标；初始化为空时取-1。</p><div class="mini-chain"><span class="ptr">pr[num]</span><span class="big-arrow">→</span><span class="node">-1</span></div>',
+ '<p>本轮准备：给车辆增加next字段，读取所属站点。</p><div class="reason-code">data[i].append(-1)<br>num = data[i][0]</div><p>这里是字段读取和赋值，不使用指针箭头。</p>',
+ '<p>若已有头节点，把新车的next设为旧头下标。</p><div class="reason-code">data[i][2] = pr[num]</div><div class="mini-chain"><span class="node new">新车 i</span><span class="big-arrow">→</span><span class="node">旧头 A</span></div>',
+ '<p>接好旧链后，再把站点入口改为新车。</p><div class="reason-code">pr[num] = i</div><div class="mini-chain"><span class="ptr">pr[num]</span><span class="big-arrow">→</span><span class="node new">i</span><span class="big-arrow">→</span><span class="node">A</span></div>'
+ ];
+ return diagrams[step];
+}
+function q2Code(step){
+ const groups=[
+ ['pr = [-1 for i in range(m)]','初始化各站入口'],
+ ['for i in range(len(data)):\n    data[i].append(-1)\n    num = data[i][0]','一轮循环的准备块'],
+ ['    if pr[num] != -1:\n        data[i][2] = pr[num]','非空分支：新节点连接旧头'],
+ ['    pr[num] = i\nreturn pr','更新表头；循环结束后返回']
+ ];
+ return groups.map(([code,note],i)=>'<div class="bike-code-block '+(step===i?'active':'')+'"><pre>'+code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre><div class="block-brace" aria-hidden="true">}</div><div class="block-purpose">'+note+'</div></div>').join('');
+}
+  function renderQ2(){
+    const step=idx.q2;
+    document.getElementById('q2-title').textContent=q2Steps[step].title;
+    document.getElementById('q2-visual').innerHTML=q2Steps.map((s,k)=>'<section class="q2-stage '+(k===step?'current':k<step?'complete':'upcoming')+'"><h3>'+s.title+'</h3>'+q2Visual(k)+'</section>').join('');
+    document.getElementById('q2-code').innerHTML=q2Code(step);
+    const msgs=[
+      '把每个停靠点想成一条单链表，pr[num] 就是这条链表的入口。',
+      'num = data[i][0]：先知道当前车辆属于哪个停靠点。',
+      '新结点要“头插”：新车必须先连到旧头，否则旧链会断。',
+      '最后把头指针移到新车 i。'
+    ];
+    document.getElementById('q2-explain').innerHTML=`<div class="callout">${msgs[step]}</div>`;
+  }
+
+
+function buildQ3Raw(key){
+ const cases={
+  middle:{powers:[95,88,80,73],power:80},head:{powers:[80,73],power:95},tail:{powers:[95,80],power:30},
+  empty:{powers:[],power:80},ties:{powers:[95,80,80,73],power:80},
+  low19:{powers:[95,80],power:19},edge20:{powers:[95,80],power:20},
+  borrowEmpty:{powers:[],borrow:true},borrowOne:{powers:[80],borrow:true},borrowHead:{powers:[95,88,80],borrow:true}
+ };
+ const c=cases[key],nodes=c.powers.map((power,id)=>({id,power,next:id===c.powers.length-1?-1:id+1}));
+ let head=nodes.length?0:-1,q=null,p=null,vel=c.borrow?null:nodes.length,power=c.power,borrowed=null;
+ if(!c.borrow)nodes.push({id:vel,power,next:-1});
+ const frames=[],snap=(line,title,text)=>frames.push(JSON.parse(JSON.stringify({line,title,text,nodes,head,q,p,vel,power,borrowed})));
+ snap(c.borrow?4:11,'教学补充数据：初始化','本例独立于第（1）问。所有节点都显示编号、power和next；高亮语句执行后再显示变化。');
+ if(c.borrow){
+  snap(6,'判断是否为空',`pr[loc]=${head}，是否等于-1：${head===-1}。`);
+  if(head===-1)snap(7,'无车可借','空站不读取data[-1]，保持空链。');
+  else{
+   borrowed=head;snap(9,'输出头车编号',`借出车辆${head}，此时表头尚未改变。`);
+   const old=head;head=nodes[head].next;snap(10,'① 表头移动',`pr[loc]：${old} → ${head}；${head===-1?'唯一车辆借走，空链形成。':'剩余链表从下一辆开始。'}`);
+  }
+ }else{
+  snap(13,'判断换电条件',`power=${power}，power<20 为${power<20}。20不换电，19要换电。`);
+  if(power<20){power=100;snap(15,'更换电池',`power改为100；下一步才写入data[vel][1]。`);}
+  nodes[vel].power=power;snap(16,'更新归还车辆电量',`data[${vel}][1]=${power}。`);
+  q=p=head;snap(17,'从表头扫描',`q=p=pr[loc]=${head}。`);
+  while(p!==-1&&nodes[p].power>=power){
+   snap(18,'② 条件为真',`p=${p}且${nodes[p].power}≥${power}，旧车应在新车前面。`);
+   q=p;snap(19,'q记住当前节点',`q=${q}。`);
+   p=nodes[p].next;snap(20,'p走到下一个节点',`p=${p}。新车仍在链外。`);
+  }
+  snap(18,'② 条件为假',p===-1?'p=-1，到达链尾；短路求值，不访问data[-1]。':`现有${nodes[p].power}<新车${power}，在p之前插入。`);
+  snap(21,'判断是否头插',`q=${q}、p=${p}，q==p 为${q===p}。${q===p?'空链或头插，修改表头。':'非头插，q是前驱。'}`);
+  if(q===p){const old=head;head=vel;snap(22,'表头连接新车',`pr[loc]：${old} → ${vel}；下一步补上新车的next。`);}
+  else{const old=nodes[q].next;nodes[q].next=vel;snap(24,'前驱连接新车',`data[${q}][2]：${old} → ${vel}；原后继p=${p}仍保留。`);}
+  nodes[vel].next=p;snap(25,'③ 新车连接后继',`data[${vel}][2]=${p}；接链完成。`);
+ }
+ return frames;
+}
+
+function buildQ3(key){
+ const raw=buildQ3Raw(key),frames=[];
+ raw.forEach((s,i)=>{
+   if(i===0){frames.push({...s,lines:s.vel===null?[4]:[11],title:'开始：当前链表与操作'});return;}
+   if(s.vel===null){
+     if(s.line===7||s.line===10)frames.push({...s,lines:s.line===7?[6,7]:[8,9,10],title:s.line===7?'空站分支：无车可借':'借车分支：输出头车并移动表头'});
+   }else if(s.line===17){
+     frames.push({...s,lines:[13,14,15,16,17],title:'准备块：换电判断、保存电量、初始化q和p',text:'完成换电判断并写入电量；q、p都从表头开始。'});
+   }else if(s.line===18&&(i===raw.length-1||raw[i+1].line===21)){
+     frames.push({...s,lines:[18,19,20],title:'遍历块：一次找到完整插入位置',text:s.text+' q和p已到最终插入位置；不逐次点击遍历。'});
+   }else if(s.line===25){
+     frames.push({...s,lines:[21,22,23,24,25],title:'插入块：更新表头或前驱，并接回后继',text:'接链完成。头插／空链更新pr[loc]，其他情况更新data[q][2]；随后统一设置data[vel][2]=p。'});
+   }
+ });
+ return frames;
+}
+let q3Steps=buildQ3('middle');
+function q3Visual(step){
+ const s=q3Steps[step],seen=new Set(),chain=[];let at=s.head;
+ while(at!==-1&&!seen.has(at)){seen.add(at);chain.push(s.nodes[at]);at=s.nodes[at].next;}
+ const nodeHTML=n=>`<span class="node ${n.id===s.vel?'new':''}"><strong>${n.id}号 · ${n.power}</strong>next=${n.next}${n.id===s.q?' · q':''}${n.id===s.p?' · p':''}</span>`;
+ return `<div class="state-note">pr[loc]=${s.head} · q=${s.q??'—'} · p=${s.p??'—'} · vel=${s.vel??'—'} · power=${s.power??'—'}</div>
+ <div class="chain"><span class="ptr">pr[loc]</span><span class="big-arrow">→</span>${chain.map(nodeHTML).join('<span class="big-arrow">→</span>')}${chain.length?'<span class="big-arrow">→</span>':''}<span class="node">-1</span></div>
+ <p>未从当前表头连接的节点（含待插入、暂未接回或已借出节点）：</p><div class="chain">${s.nodes.filter(n=>!seen.has(n.id)).map(nodeHTML).join('')||'无'}</div>
+ <div class="table-scroll"><table class="data-table"><thead><tr><th>编号</th><th>电量data[id][1]</th><th>next=data[id][2]</th></tr></thead><tbody>${s.nodes.map(n=>`<tr><td>${n.id}${n.id===s.vel?'（归还）':''}${n.id===s.borrowed?'（借出）':''}</td><td>${n.power}</td><td>${n.next}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+  function q3Code(step){
+    const lines=[
+      '# 读取共享电动车数据到 data，停靠点数量到 m，代码略',
+      'pr=classfiy(data,m)',
+      'while True:',
+      '    # 读取操作类型 t：0 借车，1 还车，代码略',
+      '    if t==0:',
+      '        # 读取借车停靠点编号 loc，代码略',
+      '        if pr[loc]==-1:',
+      '            print("无车可借")',
+      '        else:',
+      '            print("借出车辆",pr[loc])',
+      '            pr[loc]=data[pr[loc]][2]',
+      '    else:',
+      '        # 读取 loc、vel、power，代码略',
+      '        if power<20:',
+      '            # 更换电池，代码略',
+      '            power=100',
+      '        data[vel][1]=power',
+      '        q=p=pr[loc]',
+      '        while p!=-1 and data[p][1]>=data[vel][1]:',
+      '            q=p',
+      '            p=data[p][2]',
+      '        if q==p:',
+      '            pr[loc]=vel',
+      '        else:',
+      '            data[q][2]=vel',
+      '        data[vel][2]=p'
+    ];
+
+    const his = new Set(q3Steps[step].lines);
+
+
+    const blocks=[[0,5,'初始化及操作类型判断'],[6,10,'借车分支：为空则提示，否则借出头车并修改入口'],[11,17,'还车准备：判断换电、更新电量，q、p从表头出发'],[18,20,'完整遍历循环：跳过所有电量更高或相同的旧车'],[21,25,'完整插入分支：更新入口或前驱，再连接新车后继']];
+    return blocks.map(([a,b,note])=>{
+      const active=Array.from(his).some(n=>n>=a&&n<=b);
+      const code=lines.slice(a,b+1).map(x=>x.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')).join('\n');
+      return '<div class="bike-code-block '+(active?'active':'')+'"><pre>'+code+'</pre><div class="block-brace" aria-hidden="true">}</div><div class="block-purpose">'+note+'</div></div>';
+    }).join('');
+  }
+
+  function renderQ3(){
+    const step=idx.q3;
+    document.getElementById('q3-title').textContent=q3Steps[step].title;
+    document.getElementById('q3-visual').innerHTML=q3Visual(step);
+    document.getElementById('q3-code').innerHTML=q3Code(step);
+    document.getElementById('q3-explain').innerHTML='<div class="callout">'+q3Steps[step].text+'</div>';
+
+  }
+
+  const lengths={q1:q1Steps.length,q2:q2Steps.length,q3:q3Steps.length};
+  function render(){
+    renderQ1();renderQ2();renderQ3();
+    secs.forEach(s=>s.classList.toggle('hidden',s.id!==active));
+    tabs.forEach(t=>t.classList.toggle('active',t.dataset.tab===active));
+    status.textContent=`步骤 ${idx[active]+1} / ${lengths[active]}`;
+    prev.disabled=idx[active]===0;
+    next.disabled=idx[active]===lengths[active]-1;
+  }
+  tabs.forEach(t=>t.addEventListener('click',()=>{active=t.dataset.tab;render()}));
+  prev.addEventListener('click',()=>{if(idx[active]>0)idx[active]--;render()});
+  next.addEventListener('click',()=>{if(idx[active]<lengths[active]-1)idx[active]++;render()});
+  reset.addEventListener('click',()=>{idx[active]=0;render()});
+  document.getElementById('q3Case').addEventListener('change',()=>{
+    q3Steps=buildQ3(document.getElementById('q3Case').value);idx.q3=0;active='q3';lengths.q3=q3Steps.length;render();
+  });
+  document.getElementById('q3End').addEventListener('click',()=>{idx[active]=lengths[active]-1;render();});
+  document.addEventListener('keydown',e=>{
+    if(e.target.matches('input,textarea,select,button'))return;
+    if(e.key==='ArrowRight'){e.preventDefault();idx[active]=Math.min(idx[active]+1,lengths[active]-1);render();}
+    if(e.key==='ArrowLeft'){e.preventDefault();idx[active]=Math.max(idx[active]-1,0);render();}
+  });
+  render();
+})();
+
+
+document.getElementById('lessonLarge').addEventListener('click',function(){
+ const on=document.body.classList.toggle('large');this.textContent=on?'标准字号':'大字模式';this.setAttribute('aria-pressed',String(on));
+});
+
+</script>
+</body>
+</html>

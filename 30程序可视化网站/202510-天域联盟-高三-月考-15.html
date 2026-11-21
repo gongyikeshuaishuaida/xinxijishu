@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>202510-天域联盟-高三-月考-15｜扫描线算法</title>
+<style>
+:root{
+  --bg:#f6f8fb;--card:#fff;--text:#172033;--muted:#687386;--line:#dce2ec;
+  --accent:#3568d4;--accent-soft:#eaf1ff;--warn:#f2b93b;--warn-soft:#fff6dc;
+  --green:#2d9b68;--green-soft:#e9f7ef;--red:#d94f58;--red-soft:#feecee;
+  --shadow:0 7px 22px rgba(27,44,74,.07)
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:"Microsoft YaHei","PingFang SC",system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text)}
+button{font:inherit}
+.wrap{max-width:1500px;margin:auto;padding:12px 16px 24px}
+.header{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:9px}
+.header h1{font-size:23px;margin:0 0 4px}
+.header p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+.badge{white-space:nowrap;background:var(--accent-soft);color:var(--accent);padding:7px 11px;border-radius:999px;font-weight:800;font-size:13px}
+
+.controls{
+  position:sticky;top:6px;z-index:20;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:rgba(255,255,255,.97);backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);
+  padding:8px 10px;margin-bottom:10px
+}
+.btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;cursor:pointer;font-weight:800}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.progress{font-size:12px;color:var(--muted)}
+.phase-mini{flex:1;min-width:310px;background:var(--accent-soft);border-radius:9px;padding:6px 9px;font-size:12px;line-height:1.45}
+.phase-mini b{color:var(--accent)}
+
+.stage{
+  display:grid;
+  grid-template-columns:minmax(470px,1.16fr) minmax(450px,1fr) minmax(360px,.84fr);
+  gap:10px;
+  align-items:start
+}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:11px;min-width:0}
+.card h2{font-size:15px;margin:0 0 8px}
+svg{display:block;width:100%;height:auto;background:#fbfcfe;border-radius:11px;border:1px solid var(--line)}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px;font-size:11px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:4px}
+.dot{width:9px;height:9px;border-radius:3px}
+
+.event{font-size:12px;margin-bottom:7px}
+.event code{font-family:Consolas,monospace;background:#f4f6fa;border:1px solid var(--line);border-radius:7px;padding:4px 6px}
+.vars{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.var{border:1px solid var(--line);background:#fafbfe;border-radius:10px;padding:8px}
+.var .k{font-size:10px;color:var(--muted)}
+.var .v{font-size:18px;font-weight:900;margin-top:2px}
+.var.ans{background:var(--warn-soft);border-color:#efd687}
+.sep{height:1px;background:var(--line);margin:9px 0}
+
+.hxline{font-family:Consolas,monospace;font-size:11px;color:var(--muted);margin-bottom:6px}
+.hgt-table{overflow:hidden;border:1px solid var(--line);border-radius:10px}
+.hgt-head,.hgt-row{
+  display:grid;grid-template-columns:60px 1.35fr 72px 1.12fr 1fr;
+  align-items:center
+}
+.hgt-head{background:#f7f9fc;color:#5d687a;font-size:11px;font-weight:800}
+.hgt-row{font-size:11px;border-top:1px solid var(--line);transition:.2s}
+.hgt-head>div,.hgt-row>div{padding:7px 6px;text-align:center;border-right:1px solid var(--line)}
+.hgt-head>div:last-child,.hgt-row>div:last-child{border-right:0}
+.hgt-row.covered{background:var(--green-soft)}
+.hgt-row.changed{background:var(--warn-soft)}
+.hgt-row.changed .count{font-weight:900;color:#9b6910}
+.hgt-row .count{font-size:12px;font-weight:800}
+.hgt-row .contrib{font-weight:900;color:var(--green);background:#dff3e7;padding:2px 6px;border-radius:999px;display:inline-block}
+.hgt-row .contrib.active{background:#bce7cb;box-shadow:0 0 0 2px rgba(45,155,104,.12) inset}
+.hgt-row .none{color:#9ba2ad;font-weight:500}
+.smallnote{font-size:10.5px;color:var(--muted);line-height:1.45;margin-top:6px}
+
+.step-note{margin-top:8px;border-radius:10px;padding:8px 9px;background:#f7f9fc;border:1px solid var(--line);font-size:11px;line-height:1.55}
+.step-note strong{color:var(--accent)}
+.final{margin-top:7px;background:var(--green-soft);border:1px solid #a8d8bf;border-radius:9px;padding:8px;text-align:center;font-size:12px;font-weight:900;color:#17623e}
+.hidden{display:none}
+
+.code{border-radius:11px;background:#151b28;color:#dce7ff;padding:9px;overflow:auto;font:11.5px/1.58 Consolas,monospace}
+.code-line{display:block;padding:1px 6px;border-radius:5px;white-space:pre}
+.code-line.hl{background:#33405b;color:#fff}
+.code-line.hl2{background:#4e411f;color:#fff0bd}
+.code-explain{margin-top:8px;border-radius:9px;padding:8px 9px;background:var(--accent-soft);font-size:11px;line-height:1.55}
+.code-explain code{font-family:Consolas,monospace}
+.footer-note{margin-top:7px;color:var(--muted);font-size:10.5px;line-height:1.45}
+
+@media(max-width:1180px){
+  .stage{grid-template-columns:1fr 1fr}
+  .code-card{grid-column:1/-1}
+}
+@media(max-width:780px){
+  .wrap{padding:9px}
+  .stage{grid-template-columns:1fr}
+  .code-card{grid-column:auto}
+  .header h1{font-size:20px}
+  .badge{display:none}
+  .phase-mini{order:3;width:100%;min-width:0}
+  .vars{grid-template-columns:repeat(2,1fr)}
+  .hgt-head,.hgt-row{grid-template-columns:48px 1.25fr 62px 1fr 1fr}
+}
+
+.reasoning-card{margin-top:12px}
+.reasoning-intro{background:#f7f9fc;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.7;color:#4f5c70}
+.reasoning-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.reason-box{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff}
+.reason-box h3{margin:0 0 7px;font-size:14px}
+.answer-chip{display:inline-block;background:var(--accent-soft);color:var(--accent);font:700 12px Consolas,monospace;padding:4px 7px;border-radius:7px;margin-bottom:7px}
+.reason-steps{margin:0;padding-left:20px;font-size:12px;line-height:1.75;color:#435066}
+.reason-steps li+li{margin-top:3px}
+.reason-key{margin-top:7px;background:var(--warn-soft);border-left:4px solid var(--warn);padding:7px 9px;border-radius:7px;font-size:12px;line-height:1.65}
+.reason-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}
+.reason-table th,.reason-table td{border:1px solid var(--line);padding:6px;text-align:center}
+.reason-table th{background:#f7f9fc}
+.reason-code{font-family:Consolas,monospace;background:#f4f6fa;padding:1px 4px;border-radius:5px}
+.reason-summary{margin-top:10px;background:var(--green-soft);border:1px solid #add9c2;border-radius:10px;padding:9px 11px;font-size:12px;line-height:1.7}
+@media(max-width:900px){.reasoning-grid{grid-template-columns:1fr}}
+
+
+/* Classroom controls and readable layout */
+.lesson-tools{position:sticky;top:0;z-index:30;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px;background:#fff;border:1px solid #ccd5e1;border-radius:12px;margin:10px 0}
+.lesson-tools button,.lesson-tools select{font:inherit;padding:8px 12px;border:1px solid #bac7d9;background:#fff;color:#20334e;border-radius:8px;min-height:40px;max-width:100%}
+.lesson-tools button:disabled{opacity:.4}
+.lesson-tools label{display:flex;gap:6px;align-items:center}
+.lesson-tools input{width:18px;height:18px}
+.lesson-tools button:focus-visible,.lesson-tools select:focus-visible{outline:3px solid #e6a323}
+.solution{display:block!important}
+.fill{font-size:inherit}.fill::before{display:none}
+body.reveal .fill{font-size:inherit}body.reveal .fill::before{display:none}
+body.large .code,body.large .codebox,body.large .code-line,body.large .line{font-size:16px!important}
+body.large .event-text,body.large .rule-box,body.large .callout,body.large .small,body.large .step-note,body.large .code-explain,body.large .hgt-row,body.large .hgt-head{font-size:18px!important}
+
+body.large .stage,body.large .main-grid,body.large .grid{grid-template-columns:minmax(0,1fr)!important}
+body.large .code-card{grid-column:auto}
+.table-scroll{overflow-x:auto;max-width:100%}
+.data-table{border-collapse:collapse;width:100%;font-size:15px}
+.data-table th,.data-table td{padding:8px;border:1px solid #d5dfeb;text-align:center}
+.data-table th{background:#eef3fa}.data-table .changed{background:#fff2cd}
+.state-code{margin:0;padding:12px;background:#152238;color:#e8f0ff;border-radius:12px;overflow:auto;max-height:540px;font:14px/1.65 Consolas,monospace}
+.state-code .line{display:block;white-space:pre;padding:2px 6px}.state-code .hi{background:#526080;color:white;border-radius:4px}
+body.large .state-code{font-size:16px}
+.state-note{padding:10px 12px;background:#edf4ff;border-left:4px solid #386cd2;line-height:1.7;margin:10px 0}
+
+.stage{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}.code-card{grid-column:1/-1}
+.code,.hgt-head,.hgt-row{font-size:14px}.smallnote,.step-note,.code-explain{font-size:14px}
+.controls{position:static}.lesson-tools{position:sticky}.header .badge{display:none}
+@media(max-width:850px){.stage{grid-template-columns:minmax(0,1fr)}}
+
+/* Compact, persistent classroom header */
+.classroom-header{position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;gap:8px 10px;padding:10px 12px;margin:0 0 12px;background:#fff;border:1px solid #d5deeb;border-radius:12px;box-shadow:0 3px 14px #1c355012}
+.classroom-header h1{font-size:21px;margin:0;flex:0 0 auto}
+.classroom-header button,.classroom-header select{font:inherit;padding:7px 10px;border:1px solid #c8d3e3;border-radius:8px;background:#fff;color:#243954;min-height:38px;max-width:100%}
+.classroom-header button.primary{background:#2863ce;color:white}
+.classroom-header button:disabled{opacity:.4}
+.classroom-header label{display:flex;align-items:center;gap:5px;font-size:14px}
+.classroom-header #lessonLarge{margin-left:0}
+.classroom-header .header-controls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.classroom-header .status,.classroom-header .progress{white-space:nowrap;font-size:14px}
+.classroom-header .header-note{flex-basis:100%;font-size:14px}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+.stage>section:first-child{grid-column:1;grid-row:1}.stage>section:nth-child(2){grid-column:1;grid-row:2}.stage>.code-card{grid-column:2;grid-row:1 / span 2}
+.scan-block{display:grid;grid-template-columns:minmax(0,1fr) 20px minmax(100px,.4fr);gap:7px;margin-bottom:10px;padding:6px;border:1px solid #d7e0ed;border-radius:10px}.scan-block.active{background:#eef5ff;border-color:#8db2e8}
+.block-brace{display:flex;align-items:center;justify-content:center;font:64px Georgia;color:#7897bb}.block-purpose{display:flex;align-items:center;font-size:14px;line-height:1.7}
+@media(min-width:1600px){.stage{grid-template-columns:minmax(0,1fr) minmax(0,.9fr) minmax(0,1.15fr)}.stage>section:nth-child(2){grid-column:2;grid-row:1}.stage>.code-card{grid-column:3;grid-row:1}}
+@media(max-width:850px){.stage{grid-template-columns:minmax(0,1fr)}.stage>section:first-child,.stage>section:nth-child(2),.stage>.code-card{grid-column:auto;grid-row:auto}}
+body.large .stage>section{grid-column:auto;grid-row:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="classroom-header">
+<h1>扫描线 · 矩形并集</h1><div class="header-controls">
+<button class="btn" id="prev">← 上一步</button><button class="btn primary" id="next">下一步 →</button><button class="btn" id="reset">重置</button><button class="btn" id="endBtn">到最后</button><button id="lessonLarge" aria-pressed="false">大字模式</button></div>
+<label>案例 <select id="caseSelect"><option value="original">原图：C从x=6开始</option><option value="modified">（1）C从x=8开始</option><option value="separate">互不重叠</option><option value="contained">完全包含</option><option value="touch">边界相接／同x</option></select></label>
+<span class="progress" id="progress">0 / 12</span>
+<div class="header-note phase-mini" id="phase">每步完成一个循环块：先统计面积，再更新覆盖数。</div>
+</header>
+  <div class="stage">
+    <section class="card">
+      <h2>① 图形与扫描线</h2>
+      <svg id="scene" viewBox="0 0 760 470" aria-label="扫描线图形演示">
+        <g id="grid"></g>
+        <g id="zones"></g>
+        <g id="rects"></g>
+        <g id="slices"></g>
+        <g id="scan"></g>
+        <g id="axes"></g>
+        <g id="hgtAxis"></g>
+      </svg>
+      <div class="legend">
+        <span><i class="dot" style="background:#8eb9ef"></i>已计算面积</span>
+        <span><i class="dot" style="background:#f0b33e"></i>本轮正在计算</span>
+        <span><i class="dot" style="background:#b9dcc8"></i>第二个 for 更新后的下一竖条</span>
+        <span><i class="dot" style="background:#dfe8f6"></i>右侧尚未计算</span>
+        <span><i class="dot" style="background:#df5159"></i>当前 x</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>② 当前变量</h2>
+      <div class="event">item[i]：<code id="event">尚未开始</code></div>
+      <div class="vars">
+        <div class="var"><div class="k">循环轮次 i</div><div class="v" id="vi">—</div></div>
+        <div class="var"><div class="k">上一刻位置 last</div><div class="v" id="vlast">0</div></div>
+        <div class="var"><div class="k">当前总高 h</div><div class="v" id="vh">0</div></div>
+        <div class="var ans"><div class="k">累计面积 ans</div><div class="v" id="vans">0</div></div>
+      </div>
+
+      <div class="sep"></div>
+      <h2>③ 纵向高度槽状态（hgt 数组）</h2>
+      <div class="hxline" id="hxInfo"></div>
+
+      <div class="hgt-table">
+        <div class="hgt-head">
+          <div>槽位 j</div>
+          <div>高度区间 [hx[j], hx[j+1]]</div>
+          <div>长 (Δy)</div>
+          <div>覆盖数 hgt[j]</div>
+          <div>h 高度累加</div>
+        </div>
+        <div id="hgtRows"></div>
+      </div>
+
+      <div class="smallnote">图表统一口径：统计阶段显示旧覆盖数；更新阶段显示新覆盖数。有效槽数为hx.length−1；本演示省略原程序可能保留且始终为0的末尾占位槽。</div>
+
+      <div class="step-note" id="stepNote">
+        <strong>④ 当前步骤说明：</strong>尚未开始。
+      </div>
+      <div class="final hidden" id="final">扫描结束：4 + 24 + 8 + 7 + 12 = 55</div>
+    </section>
+
+    <section class="card code-card">
+      <h2>⑤ 对照原程序</h2>
+      <div class="scan-code">
+<div class="scan-block" data-phase="measure"><div class="code">
+<span class="code-line" data-line="1">for i in range(2 * n):</span>
+<span class="code-line" data-line="2">    h = 0</span>
+<span class="code-line" data-line="3">    for j in range(len(hgt)):</span>
+<span class="code-line" data-line="4">        if hgt[j] &gt; 0:</span>
+<span class="code-line" data-line="5">            <span class="fill" data-blank="② ____">h += hx[j + 1] - hx[j]</span>      # ②</span>
+<span class="code-line" data-line="6">    ans += (item[i][0] - last) * h</span>
+</div><div class="block-brace" aria-hidden="true">}</div><div class="block-purpose">完整统计覆盖高度，再求左侧竖条面积。</div></div>
+<div class="scan-block" data-phase="update"><div class="code"><span class="code-line" data-line="7">    for j in range(<span class="fill" data-blank="③ ____">item[i][1], item[i][2]</span>):  # ③</span>
+<span class="code-line" data-line="8">        hgt[j] += item[i][3]</span>
+<span class="code-line" data-line="9">    last = item[i][0]</span>
+</div><div class="block-brace" aria-hidden="true">}</div><div class="block-purpose">处理当前边界：覆盖数增减，更新last。</div></div>
+      </div>
+      <div class="code-explain" id="codeExplain">
+        当前还没有进入循环。点击“下一步”开始。
+      </div>
+      <div class="footer-note">按两个代码块分步，非逐行执行。图表显示代码块完成后的状态；可用键盘←/→。大字模式适合投影。</div>
+    </section>
+  </div>
+
+  <section class="card reasoning-card solution">
+    <h2>⑥ 每一空是怎么推理出来的？</h2>
+
+    <div class="reasoning-intro">
+      先看整段程序要完成的核心任务：
+      <b>把图形从左往右分成一条一条竖直小块，每一块的面积 = 宽 × 这一块中实际被矩形盖住的总高度。</b>
+      <br>
+      程序只是把“什么时候有矩形加入 / 什么时候有矩形离开”“这一竖条有多高”用数组记录下来。
+      所以下面的每一空，都可以直接从代码前后关系推出来。
+    </div>
+
+    <div class="reasoning-grid">
+
+      <div class="reason-box">
+        <h3>（1）总面积为什么是 54？</h3>
+        <div class="answer-chip">答案：54</div>
+        <ol class="reason-steps">
+          <li>第三个矩形改为 <span class="reason-code">[8,2,10,8]</span> 后，关键横坐标为 2、3、7、8、10。</li>
+          <li>从左到右分成 4 个竖条：<span class="reason-code">[2,3]</span>、<span class="reason-code">[3,7]</span>、<span class="reason-code">[7,8]</span>、<span class="reason-code">[8,10]</span>。</li>
+          <li>每条只求“这一段横向范围内，被覆盖的总高度”。</li>
+        </ol>
+        <table class="reason-table">
+          <tr><th>竖条</th><th>宽</th><th>覆盖总高</th><th>面积</th></tr>
+          <tr><td>[2,3]</td><td>1</td><td>4</td><td>4</td></tr>
+          <tr><td>[3,7]</td><td>4</td><td>8</td><td>32</td></tr>
+          <tr><td>[7,8]</td><td>1</td><td>6</td><td>6</td></tr>
+          <tr><td>[8,10]</td><td>2</td><td>6</td><td>12</td></tr>
+        </table>
+        <div class="reason-key">所以总面积 = 4 + 32 + 6 + 12 = <b>54</b>。</div>
+      </div>
+
+      <div class="reason-box">
+        <h3>（2）sort 中的空怎么推？</h3>
+        <div class="answer-chip">item[j] = item[j - 1]</div>
+        <ol class="reason-steps">
+          <li>循环条件 <span class="reason-code">item[j - 1][0] &gt; tmp[0]</span> 表示：前面的元素横坐标更大。</li>
+          <li>目标是按横坐标升序，所以这个较大的元素必须往右挪一格。</li>
+          <li>“把 j-1 位置搬到 j 位置”就是 <span class="reason-code">item[j] = item[j - 1]</span>。</li>
+          <li>接着 <span class="reason-code">j -= 1</span> 继续往左找位置，最后 <span class="reason-code">item[j] = tmp</span> 把 tmp 插进去。</li>
+        </ol>
+        <div class="reason-key">看到“先保存 tmp → 大元素右移 → 最后放回 tmp”，就能判断这是插入排序。</div>
+      </div>
+
+      <div class="reason-box">
+        <h3>（3）① 二分查找的循环条件怎么推？</h3>
+        <div class="answer-chip">hx[m] != key</div>
+        <ol class="reason-steps">
+          <li>函数最后 <span class="reason-code">return m</span>，说明它要返回 key 在 hx 中的位置。</li>
+          <li>什么时候说明已经找到？就是 <span class="reason-code">hx[m] == key</span>。</li>
+          <li>那么“还要继续找”的条件就是反过来：<span class="reason-code">hx[m] != key</span>。</li>
+          <li>本题key来自矩形纵坐标，保证存在，因此此写法可用。与题库的 i &lt;= j and hx[m] != key 在本题前提下等价；查无此值时还须另行设计返回值，不能把return m当作未命中标记。</li>
+        </ol>
+        <div class="reason-key">先问“什么时候停止？”——找到就停；因此没找到时继续。</div>
+      </div>
+
+      <div class="reason-box">
+        <h3>（3）② 为什么是 h += hx[j+1] - hx[j]？</h3>
+        <div class="answer-chip">h += hx[j + 1] - hx[j]</div>
+        <ol class="reason-steps">
+          <li><span class="reason-code">if hgt[j] &gt; 0</span> 表示第 j 个纵向小区间当前被至少一个矩形覆盖。</li>
+          <li>这个小区间的上下端点是 <span class="reason-code">hx[j]</span> 和 <span class="reason-code">hx[j+1]</span>。</li>
+          <li>所以它的真实高度是 <span class="reason-code">hx[j+1] - hx[j]</span>。</li>
+          <li>h 要保存“所有被覆盖小段的总高度”，因此每遇到一段就要继续累加，而不是把前面的 h 覆盖掉。</li>
+        </ol>
+        <table class="reason-table">
+          <tr><th>区间</th><th>长度</th><th>是否覆盖</th><th>对 h 的贡献</th></tr>
+          <tr><td>[2,3]</td><td>1</td><td>是</td><td>+1</td></tr>
+          <tr><td>[3,5]</td><td>2</td><td>是</td><td>+2</td></tr>
+          <tr><td>[5,8]</td><td>3</td><td>是</td><td>+3</td></tr>
+        </table>
+        <div class="reason-key">所以 h 是“总高度”，不是“某一小段高度”，因此一定是 <b>+=</b>。</div>
+      </div>
+
+      <div class="reason-box">
+        <h3>（3）③ range 的两个端点怎么推？</h3>
+        <div class="answer-chip">item[i][1], item[i][2]</div>
+        <ol class="reason-steps">
+          <li><span class="reason-code">item[i]</span> 的格式是 <span class="reason-code">[x, y1_idx, y2_idx, delta]</span>。</li>
+          <li>所以纵向影响范围从 <span class="reason-code">item[i][1]</span> 开始，到 <span class="reason-code">item[i][2]</span> 结束。</li>
+          <li>但 <span class="reason-code">hgt[j]</span> 存的是区间 <span class="reason-code">[hx[j], hx[j+1]]</span>，不是一个坐标点。</li>
+          <li>例如 y1_idx=2、y2_idx=4，实际要改的是 j=2、3，也就是 <span class="reason-code">range(2,4)</span>。</li>
+          <li>因此右端不能写 <span class="reason-code">item[i][2] + 1</span>，否则会多改一个区间。</li>
+        </ol>
+        <div class="reason-key">关键：<b>hgt 存的是“小区间”，不是“坐标点”</b>，所以右端不取到。</div>
+      </div>
+
+      <div class="reason-box">
+        <h3>把整段程序翻译成人话</h3>
+        <ol class="reason-steps">
+          <li>每个矩形有一个“开始位置”和一个“结束位置”。</li>
+          <li>把所有开始 / 结束位置按 x 从小到大排好。</li>
+          <li>每到一个新的 x，先算“从上一个 x 到这里”的竖条面积。</li>
+          <li>竖条面积 = <span class="reason-code">(当前x - 上一个x) × 当前覆盖总高度h</span>。</li>
+          <li>面积算完，再处理当前边界：左边界让对应覆盖数 +1；右边界让对应覆盖数 -1。</li>
+          <li>然后继续往右处理下一个 x。</li>
+        </ol>
+        <div class="reason-key">理解整段程序时，只要抓住一句：<b>竖条面积 = 宽 × 高</b>。</div>
+      </div>
+
+    </div>
+
+    <div class="reason-summary">
+      <b>做代码填空时的推荐顺序：</b>
+      先看“变量表示什么 → 这一行前后要保持什么关系 → 循环结束希望得到什么”。
+      本题几个代码空分别对应：<b>插入排序右移、二分找到即停、区间长度累加、左闭右开的 range。</b>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(() => {
+
+  let hx=[],rects=[],events=[],states=[];
+  function build(key){
+    const datasets={
+      original:[[2,1,7,5],[3,3,8,9],[6,2,10,8]],
+      modified:[[2,1,7,5],[3,3,8,9],[8,2,10,8]],
+      separate:[[1,1,3,3],[5,5,7,7]],
+      contained:[[1,1,8,8],[3,3,5,5]],
+      touch:[[1,1,4,4],[4,1,7,4]]
+    };
+    rects=datasets[key].map((r,i)=>({name:String.fromCharCode(65+i),x1:r[0],y1:r[1],x2:r[2],y2:r[3],color:['#4b83df','#dc7e45','#3c9f6c'][i]}));
+    hx=[...new Set(rects.flatMap(r=>[r.y1,r.y2]))].sort((a,b)=>a-b);
+    events=rects.flatMap(r=>[{x:r.x1,y1:hx.indexOf(r.y1),y2:hx.indexOf(r.y2),delta:1,name:r.name,side:'左边界'},{x:r.x2,y1:hx.indexOf(r.y1),y2:hx.indexOf(r.y2),delta:-1,name:r.name,side:'右边界'}]).sort((a,b)=>a.x-b.x);
+    states=[];
+    let hgt=Array(hx.length-1).fill(0),last=0,ans=0;
+    events.forEach((e,i)=>{
+      const pre=hgt.slice(),rows=[];let height=0;
+      for(let j=0;j<hgt.length;j++){
+        const covered=hgt[j]>0,addH=covered?hx[j+1]-hx[j]:0;height+=addH;
+        rows.push({j,val:hgt[j],covered,addH,hNow:height});
+      }
+      const width=e.x-last,area=width*height;ans+=area;
+      states.push({kind:'measure',i,e,pre,lastBefore:last,h:height,width,area,ans,rows});
+      const preUpdate=hgt.slice(),lastBefore=last,changes=[];
+      for(let j=e.y1;j<e.y2;j++){const old=hgt[j];hgt[j]+=e.delta;changes.push({j,old,now:hgt[j]});}
+      last=e.x;
+      states.push({kind:'update',i,e,preUpdate,post:hgt.slice(),lastBefore,lastAfter:last,h:height,width,area,ans,changes});
+    });
+  }
+  build('original');
+
+  let pos=-1;
+  const $=s=>document.querySelector(s);
+  const PLOT_LEFT=132, PLOT_BOTTOM=412, XSTEP=52, YSTEP=36, PLOT_TOP=PLOT_BOTTOM-10*YSTEP;
+  const sx=x=>PLOT_LEFT+x*XSTEP, sy=y=>PLOT_BOTTOM-y*YSTEP;
+  const S='http://www.w3.org/2000/svg';
+  function el(tag,a={}){const n=document.createElementNS(S,tag);Object.entries(a).forEach(([k,v])=>n.setAttribute(k,v));return n}
+
+  function getRuns(vals){
+    const runs=[];
+    let start=null;
+    for(let j=0;j<hx.length-1;j++){
+      if(vals[j]>0 && start===null) start=j;
+      const closes = start!==null && (vals[j]<=0 || j===hx.length-2);
+      if(closes){
+        const endJ = vals[j]>0 && j===hx.length-2 ? hx.length-1 : j;
+        runs.push({j1:start,j2:endJ,y1:hx[start],y2:hx[endJ]});
+        start=null;
+      }
+    }
+    return runs;
+  }
+
+  function drawGrid(){
+    const g=$('#grid'); g.innerHTML='';
+    // 整数网格：所有横纵线都直接用 sx()/sy() 计算，保证与坐标、hx 切线严格重合
+    for(let x=0;x<=10;x++){
+      g.appendChild(el('line',{
+        x1:sx(x),x2:sx(x),y1:sy(10),y2:sy(0),
+        stroke:x===0?'#778399':'#dfe5ee',
+        'stroke-width':x===0?'1.8':'1'
+      }));
+    }
+    for(let y=0;y<=10;y++){
+      g.appendChild(el('line',{
+        x1:sx(0),x2:sx(10),y1:sy(y),y2:sy(y),
+        stroke:y===0?'#778399':'#dfe5ee',
+        'stroke-width':y===0?'1.8':'1'
+      }));
+    }
+  }
+
+  function drawAxes(){
+    const g=$('#axes');g.innerHTML='';
+    [...new Set([0,...events.map(e=>e.x),10])].sort((a,b)=>a-b).forEach(x=>{
+      const t=el('text',{
+        x:sx(x),y:438,'text-anchor':'middle',
+        'font-size':'12',fill:'#667085'
+      });
+      t.textContent=x;g.appendChild(t);
+    });
+    hx.forEach(y=>{
+      const t=el('text',{
+        x:PLOT_LEFT-9,y:sy(y)+4,'text-anchor':'end',
+        'font-size':'12',fill:'#667085'
+      });
+      t.textContent=y;g.appendChild(t);
+    });
+    const xt=el('text',{x:sx(10)+18,y:416,'font-size':'12','font-weight':'700',fill:'#667085'});
+    xt.textContent='x';g.appendChild(xt);
+    const yt=el('text',{x:PLOT_LEFT-3,y:sy(10)-10,'font-size':'12','font-weight':'700',fill:'#667085'});
+    yt.textContent='y';g.appendChild(yt);
+  }
+
+  function drawHgtAxis(vals, st){
+    const g=$('#hgtAxis'); g.innerHTML='';
+    for(let j=0;j<hx.length-1;j++){
+      const yTop=sy(hx[j+1]), yBot=sy(hx[j]), mid=(yTop+yBot)/2;
+      const active=vals[j]>0;
+      const color=active?'#258c5d':'#a9b1bd';
+
+      // 左侧括号
+      g.appendChild(el('line',{x1:PLOT_LEFT-24,x2:PLOT_LEFT-24,y1:yTop+2,y2:yBot-2,stroke:color,'stroke-width':'2.4'}));
+      g.appendChild(el('line',{x1:PLOT_LEFT-24,x2:PLOT_LEFT-16,y1:yTop+2,y2:yTop+2,stroke:color,'stroke-width':'2.4'}));
+      g.appendChild(el('line',{x1:PLOT_LEFT-24,x2:PLOT_LEFT-16,y1:yBot-2,y2:yBot-2,stroke:color,'stroke-width':'2.4'}));
+
+      const txt=el('text',{
+        x:PLOT_LEFT-31,y:mid+4,'text-anchor':'end',
+        'font-size':'11','font-weight':active?'700':'500',fill:color
+      });
+      const ch=st&&st.kind==='update' ? st.changes.find(c=>c.j===j) : null;
+      txt.textContent = ch
+        ? `hgt[${j}]: ${ch.old}→${ch.now}`
+        : `hgt[${j}]=${vals[j]}`;
+      g.appendChild(txt);
+    }
+  }
+
+  function drawUnionRuns(g,x1,x2,vals,fill,opacity){
+    getRuns(vals).forEach(run=>{
+      g.appendChild(el('rect',{
+        x:sx(x1),y:sy(run.y2),width:sx(x2)-sx(x1),height:sy(run.y1)-sy(run.y2),
+        fill:fill,'fill-opacity':opacity
+      }));
+    });
+  }
+
+  function drawSegmentedStrip(g,x1,x2,vals,fill,opacity,lineColor){
+    // 每一个 hx 小段单独画，直观对应 hgt[j]
+    for(let j=0;j<hx.length-1;j++){
+      const top=sy(hx[j+1]),bot=sy(hx[j]);
+      if(vals[j]>0){
+        g.appendChild(el('rect',{
+          x:sx(x1),y:top,width:sx(x2)-sx(x1),height:bot-top,
+          fill:fill,'fill-opacity':opacity
+        }));
+      }
+      // hx 分割线：直接落在 sy(hx[j]) 上，所以必然与网格重合
+      g.appendChild(el('line',{
+        x1:sx(x1),x2:sx(x2),y1:top,y2:top,
+        stroke:lineColor,'stroke-width':vals[j]>0?'1.8':'1',
+        'stroke-opacity':vals[j]>0?'0.95':'0.5'
+      }));
+    }
+    g.appendChild(el('line',{
+      x1:sx(x1),x2:sx(x2),y1:sy(hx[0]),y2:sy(hx[0]),
+      stroke:lineColor,'stroke-width':'1','stroke-opacity':'0.5'
+    }));
+  }
+
+  function drawScene(st){
+    const zg=$('#zones'),rg=$('#rects'),sliceG=$('#slices'),cg=$('#scan');
+    zg.innerHTML='';rg.innerHTML='';sliceG.innerHTML='';cg.innerHTML='';
+
+    // 先用很浅的矩形轮廓保留原始题意，不抢扫描状态颜色
+    rects.forEach(r=>{
+      rg.appendChild(el('rect',{
+        x:sx(r.x1),y:sy(r.y2),
+        width:sx(r.x2)-sx(r.x1),height:sy(r.y1)-sy(r.y2),
+        rx:3,fill:'#dfe8f6','fill-opacity':'.11',
+        stroke:r.color,'stroke-width':'1.5',
+        'stroke-opacity':'.62','stroke-dasharray':'5 4'
+      }));
+      const t=el('text',{
+        x:sx(r.x1)+7,y:sy(r.y2)+16,
+        'font-size':'11','font-weight':'700',fill:'#738096'
+      });
+      t.textContent=`${r.name} [${r.x1},${r.y1},${r.x2},${r.y2}]`;
+      rg.appendChild(t);
+    });
+
+    // 固定问题的所有 x 竖条及其最终覆盖状态
+    const stripDefs = events.slice(0,-1).map((e,k)=>({
+      x1:e.x, x2:events[k+1].x,
+      vals:states[2*k+1].post
+    }));
+
+    if(!st){
+      // 尚未开始：所有最终会被覆盖的区域都以极浅颜色预览
+      stripDefs.forEach(s=>drawUnionRuns(zg,s.x1,s.x2,s.vals,'#dfe8f6','.22'));
+      drawHgtAxis(Array(hx.length-1).fill(0),null);
+      return;
+    }
+
+    // 面积阶段始终统计扫描线左侧 [last,x] 的旧 hgt。
+    // 更新阶段：无论进入或退出，都显示更新后的覆盖数。
+    const displayVals = st.kind==='measure'
+      ? st.pre
+      : st.post;
+    drawHgtAxis(displayVals,st);
+
+    if(st.kind==='measure'){
+      // 已经算完的部分：统一蓝色
+      stripDefs.forEach(s=>{
+        if(s.x2<=st.lastBefore){
+          drawUnionRuns(zg,s.x1,s.x2,s.vals,'#8eb9ef','.62');
+        }else if(s.x1>=st.e.x){
+          // 右侧尚未算：统一更浅
+          drawUnionRuns(zg,s.x1,s.x2,s.vals,'#dfe8f6','.28');
+        }
+      });
+
+      // 当前 [last, x]：橙色，并按“上一次 hgt”切成 hx 小段
+      if(st.e.x>st.lastBefore){
+        drawSegmentedStrip(
+          sliceG,st.lastBefore,st.e.x,st.pre,
+          '#f0b33e','.67','#c98012'
+        );
+      }
+    }else{
+      // 第二个 for 已完成：左侧到当前 x 都已经计算完成，统一蓝色
+      stripDefs.forEach(s=>{
+        if(s.x2<=st.e.x){
+          drawUnionRuns(zg,s.x1,s.x2,s.vals,'#8eb9ef','.62');
+        }else if(s.x1>st.e.x){
+          drawUnionRuns(zg,s.x1,s.x2,s.vals,'#dfe8f6','.24');
+        }
+      });
+
+      const nextEvent=events[st.i+1];
+
+
+      // 进入和退出都显示更新后的下一竖条，保持图与表的时刻一致。
+      if(nextEvent && nextEvent.x>st.e.x){
+        drawSegmentedStrip(sliceG,st.e.x,nextEvent.x,st.post,'#b9dcc8','.52','#3a9a69');
+      }
+    }
+
+    // 当前扫描线
+    const x=sx(st.e.x);
+    cg.appendChild(el('line',{
+      x1:x,y1:sy(10),x2:x,y2:sy(0),
+      stroke:'#df5159','stroke-width':'3'
+    }));
+    const tx=el('text',{
+      x:x+7,y:sy(10)+17,
+      'font-size':'12','font-weight':'800',fill:'#c53f48'
+    });
+    tx.textContent='当前 x = '+st.e.x;
+    cg.appendChild(tx);
+  }
+
+  function renderHgt(st){
+    const box=$('#hgtRows'); box.innerHTML='';
+    let vals=Array(hx.length-1).fill(0);
+    if(st){
+      vals = st.kind==='measure' ? st.pre : st.post;
+    }
+
+    for(let j=0;j<hx.length-1;j++){
+      const len=hx[j+1]-hx[j];
+      const ch=st&&st.kind==='update' ? st.changes.find(c=>c.j===j) : null;
+      const covered=vals[j]>0;
+      const row=document.createElement('div');
+      row.className='hgt-row '+(ch?'changed ':(covered?'covered ':''));
+
+      let countText=String(vals[j]);
+      if(ch){
+        const sign=st.e.delta>0?'+ 1':'- 1';
+        countText=`${ch.old} ${sign} → ${ch.now}`;
+      }
+
+      let contrib='<span class="none">0</span>';
+      if(st&&st.kind==='measure'){
+        contrib = st.pre[j]>0
+          ? `<span class="contrib active">+${len}</span>`
+          : `<span class="none">0</span>`;
+      }else if(st&&st.kind==='update'){
+        contrib = '<span class="none">本步不累加</span>';
+      }
+
+      row.innerHTML=`
+        <div><b>j = ${j}</b></div>
+        <div>[${hx[j]}, ${hx[j+1]}]</div>
+        <div>${len}</div>
+        <div class="count">${countText}</div>
+        <div>${contrib}</div>`;
+      box.appendChild(row);
+    }
+  }
+
+  function highlight(st){
+    document.querySelectorAll('.scan-block').forEach(x=>x.classList.toggle('active',!!st&&x.dataset.phase===st.kind));
+    document.querySelectorAll('.code-line').forEach(x=>x.classList.remove('hl','hl2'));
+    if(!st)return;
+    (st.kind==='measure'?[2,3,4,5,6]:[7,8,9]).forEach(n=>{
+      document.querySelector(`[data-line="${n}"]`).classList.add(st.kind==='measure'?'hl':'hl2')
+    });
+  }
+
+  function render(){
+    const st=pos>=0?states[pos]:null;
+    $('#hxInfo').textContent='离散化：'+hx.map((v,i)=>v+' → 下标'+i).join('；')+'。item=[x, 下端点下标, 上端点下标, ±1]';
+    $('#final').textContent='扫描结束：面积='+states.at(-1).ans+'；所有有效覆盖槽归零。';
+    drawScene(st); highlight(st); renderHgt(st);
+
+    if(!st){
+      $('#event').textContent='尚未开始';
+      $('#vi').textContent='—';$('#vlast').textContent='0';$('#vh').textContent='0';$('#vans').textContent='0';
+      $('#phase').innerHTML='初始化：点击“下一步”，进入 i=0 的第一个 for 循环。';
+      $('#stepNote').innerHTML='<strong>④ 当前步骤说明：</strong>尚未开始。';
+      $('#codeExplain').innerHTML='当前还没有进入循环。点击“下一步”开始。';
+    }else{
+      const e=st.e;
+      $('#event').textContent=`[${e.x}, ${e.y1}, ${e.y2}, ${e.delta>0?'+1':'-1'}] ${e.name}${e.side}`;
+      $('#vi').textContent=st.i;
+      $('#vh').textContent=st.h;
+      $('#vans').textContent=st.ans;
+
+      if(st.kind==='measure'){
+        $('#vlast').textContent=st.lastBefore;
+        $('#phase').innerHTML=`<b>阶段 A：</b>第一个 for 完成，得到 h=${st.h}；本竖条面积 = (${e.x}-${st.lastBefore})×${st.h}=${st.area}，ans=${st.ans}。`;
+        $('#stepNote').innerHTML=`<strong>④ 当前步骤说明：</strong>③表中“h 高度累加”一列就是第一个 for 的完整结果；左图橙色竖条 [last, x] 也完全按照上一次的 hgt 和 hx 小段切开。hgt[j] > 0 的小段才贡献高度，把这些 Δy 累加得到 h=${st.h}，再计算本轮面积。`;
+        $('#codeExplain').innerHTML=`当前高亮的是<strong>第一个 for + 面积累加</strong>。注意此时还没有修改 hgt，所以左边黄色竖条使用的是<strong>上一次的 hgt</strong>；也就是先算左边这块面积。`;
+      }else{
+        $('#vlast').textContent=st.lastAfter;
+        const changed = st.changes.map(c=>`hgt[${c.j}]: ${c.old} ${e.delta>0?'+ 1':'- 1'} → ${c.now}`).join('；');
+        $('#phase').innerHTML = e.delta>0
+          ? `<b>阶段 B：</b>${e.name} 从 x=${e.x} 进入：对应 hgt 加 1，右侧下一竖条使用更新后的状态；last=${st.lastAfter}。`
+          : `<b>阶段 B：</b>${e.name} 在 x=${e.x} 退出：对应 hgt 减 1，图表均显示更新后状态，留给下一轮；last=${st.lastAfter}。`;
+        $('#stepNote').innerHTML=`<strong>④ 当前步骤说明：</strong>${changed}。变化过程已经直接显示在③“覆盖数 hgt[j]”列中。`;
+        $('#codeExplain').innerHTML = e.delta>0
+          ? `当前高亮的是<strong>第二个 for + last 更新</strong>。这是左边界 <b>+1</b>：矩形从当前 x 开始进入，所以右侧显示更新后的 hgt。`
+          : `当前高亮的是<strong>第二个 for + last 更新</strong>。这是右边界 <b>-1</b>：矩形在当前x退出，覆盖数减少；左侧面积已累计，不会被减掉。图表统一显示更新后的hgt。`;
+      }
+    }
+
+    $('#progress').textContent=`${pos+1} / ${states.length}`;
+    $('#prev').disabled=pos<0;
+    $('#next').disabled=pos>=states.length-1;
+    $('#final').classList.toggle('hidden',pos!==states.length-1);
+  }
+
+  $('#next').addEventListener('click',()=>{if(pos<states.length-1){pos++;render()}});
+  $('#prev').addEventListener('click',()=>{if(pos>=0){pos--;render()}});
+  $('#reset').addEventListener('click',()=>{pos=-1;render()});
+  document.addEventListener('keydown',e=>{
+    if(e.target.matches('input,textarea,select,button'))return;
+    if(e.key==='ArrowRight'&&pos<states.length-1){e.preventDefault();pos++;render()}
+    if(e.key==='ArrowLeft'&&pos>=0){e.preventDefault();pos--;render()}
+  });
+
+  $('#caseSelect').addEventListener('change',()=>{build($('#caseSelect').value);pos=-1;drawAxes();render();});
+  $('#endBtn').addEventListener('click',()=>{pos=states.length-1;render();});
+  drawGrid(); drawAxes(); render();
+})();
+
+
+document.getElementById('lessonLarge').addEventListener('click',function(){
+ const on=document.body.classList.toggle('large');this.textContent=on?'标准字号':'大字模式';this.setAttribute('aria-pressed',String(on));
+});
+
+</script>
+</body>
+</html>

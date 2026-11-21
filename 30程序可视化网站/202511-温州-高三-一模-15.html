@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>202511-温州-高三-一模-15｜看见完整的插入排序</title>
+<style>
+:root{--paper:#f4f1e9;--ink:#203b36;--muted:#67746d;--line:#d6dcd1;--green:#17664e;--soft:#e4eee4;--gold:#edbe51;--cream:#fff9e9;--red:#a54730;--white:#fffef9;--code:#183b33;--base:16px}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:calc(var(--bar-height,155px) + 16px)}body{margin:0;background:var(--paper);color:var(--ink);font:var(--base)/1.65 "Microsoft YaHei","PingFang SC",sans-serif}button,input,select{font:inherit}button,select,input{border:1px solid #bdc9bf;border-radius:6px;min-height:38px;background:var(--white);color:var(--ink)}button{padding:6px 12px;cursor:pointer;font-weight:700;transition:background .15s}button:hover{background:#e7eee3}button:disabled{opacity:.38;cursor:default}button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid #c78b18;outline-offset:3px}select{padding:5px 28px 5px 9px;max-width:235px}.primary{background:var(--green);border-color:var(--green);color:white}.primary:hover{background:#124f3e}.toolbar{position:sticky;top:0;z-index:20;background:rgba(244,241,233,.98);border-bottom:1px solid #c6cfc3;padding:12px 26px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}.brand{font-size:22px;letter-spacing:-.7px;margin:0 10px 0 0;white-space:nowrap}.brand em{font-style:normal;color:var(--green)}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:7px}.control{display:flex;gap:6px;align-items:center;font-size:13px}.control>span{color:var(--muted)}#round{max-width:145px}#speed{max-width:100px}.big{--base:20px}.big .code pre{font-size:17px}.big .lab,.big .detail-grid{grid-template-columns:minmax(0,1fr) minmax(450px,1.05fr)}.big .toolbar{padding:12px 18px}.big .control{font-size:15px}.big .brand{font-size:24px}.big .array .value{font-size:30px}
+main{max-width:1500px;padding:28px 32px 50px;margin:auto}h2,h3,p{margin-top:0}h2{font-size:27px;line-height:1.45;letter-spacing:-.5px}h3{font-size:19px;margin-bottom:12px}.eyebrow{font-size:12px;font-weight:700;letter-spacing:2px;color:var(--green);text-transform:uppercase}.small{font-size:13px;color:var(--muted)}.lab{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(390px,.85fr);gap:18px;align-items:start}.board{background:var(--white);border:1px solid var(--line);border-radius:10px;overflow:hidden;min-width:0}.board-head{padding:17px 22px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}.board-head h3{margin:0;font-size:19px}.stamp{font:700 12px/1.5 Consolas,monospace;background:var(--soft);color:var(--green);padding:5px 9px;border-radius:3px;white-space:nowrap}.progress{height:4px;background:#e6e9dd}.progress div{height:100%;background:var(--green);transition:width .4s}.scene{padding:18px 22px 20px;min-height:270px}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:16px}.legend span:before{content:"";display:inline-block;width:9px;height:9px;border:1px solid #c4cbbd;background:#f2eee2;margin-right:5px}.legend .lg:before{background:var(--green)}.legend .lk:before{background:var(--gold)}.array{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:8px;position:relative}.slot{min-width:0;text-align:center;position:relative}.tile{background:#f0ede3;border:1px solid #d9d6c9;border-radius:7px;padding:10px 3px 8px;position:relative;min-height:98px;display:flex;flex-direction:column;justify-content:center;align-items:center;box-shadow:0 3px 0 #e4e1d5}.tile.ordered{background:var(--soft);border-color:#a4beab;box-shadow:0 3px 0 #c5d7c5}.tile.key{background:var(--gold);border:2px solid #9f740f;box-shadow:0 3px 0 #d5a73b}.tile.hole{background:transparent;border:2px dashed #bea96d;box-shadow:none}.tag{font:12px Consolas,monospace;color:#52685a}.value{font:700 28px/1.3 Georgia,"SimSun",serif;letter-spacing:-.4px}.payload{font-size:12px;color:#52685a;white-space:nowrap}.idx{font:12px/1.6 Consolas,monospace;color:var(--muted);margin-top:7px}.boundary{position:absolute;right:-6px;top:-7px;height:118px;border-right:2px dashed var(--green);z-index:1}.bands{display:flex;margin:10px 0 13px;gap:7px;font-size:12px;text-align:center}.band{border-top:2px solid #a5b8a7;padding-top:5px;color:var(--green);min-width:0}.band.wait{border-color:#d7d1bf;color:#827b68}.thought{font-size:17px;min-height:56px;margin:15px 0 0;padding:12px 15px;background:#f3f6ee;border-left:3px solid var(--green)}.thought strong{color:var(--green)}.stats{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:#f6f7ef}.stat{padding:10px 12px;border-right:1px solid var(--line)}.stat:last-child{border:0}.stat b{font:700 24px/1.3 Georgia,serif;display:block}.stat span{font-size:12px;color:var(--muted)}.code{background:var(--code);color:#e5ebdc;border:0}.code .board-head{border-color:#416052}.code .small{color:#b4cbbb}.code .board-head h3{color:#fffaf0}.code-body{padding:12px 14px}.code pre{font:14px/1.8 Consolas,"Microsoft YaHei",monospace;margin:0;white-space:pre;overflow-x:auto;tab-size:4}.code-block{display:grid;grid-template-columns:minmax(0,1fr) 106px;gap:8px;padding:5px 7px;border:1px solid transparent;border-radius:5px}.code-block.active{background:#315a46;border:1px solid #a6c587}.code-note{display:flex;align-items:center;color:#c3d6b5;font-size:12px;line-height:1.7}.brace{font:36px/1 Georgia,serif;margin-right:5px;color:#abc897}.code .answer{color:#ffe093}.code-foot{border-top:1px solid #416052;padding:12px 20px;font-size:13px;color:#d2dfc6}.code-foot strong{color:#ffe093}
+.ledger{margin-top:17px;padding:15px 20px}.ledger-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.ledger-title h3{margin:0;font-size:17px}.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:14px;text-align:left}th{font-size:12px;color:var(--muted);font-weight:400;background:#f3f4eb}td,th{padding:7px 10px;border-bottom:1px solid #e1e5d9;white-space:nowrap}tr.current{background:#f8edc9}td .ordered-text{color:var(--green);font-weight:700}td .wait-text{color:#797d73}td code{font:13px Consolas,monospace}tr.future{color:#94998d}tr:last-child td{border-bottom:0}.detail-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(390px,.85fr);gap:18px;align-items:start}.detail-body{padding:18px 22px}.detail-intro{font-size:14px;color:var(--muted);margin-bottom:15px}.detail-expr{font-size:17px;font-weight:700;min-height:36px;margin:13px 0 0}.event-list{padding-left:24px;margin:10px 0 0;font-size:14px;line-height:1.8}.event-list li{padding:5px 8px;border-left:2px solid #cbd5c5;margin-left:-5px}.event-list li.current-event{background:#f8edc9;border-color:#bd8c22}.event-list li small{display:block;color:var(--muted);font:12px/1.65 Consolas,"Microsoft YaHei",monospace}.explain-card{background:#e6ecdf;border:1px solid #d2dbc8;border-radius:10px;padding:21px 24px}.explain-card p{font-size:15px}.explain-card p:last-child{margin-bottom:0}.equation{font-size:19px;padding:13px 0;border-block:1px solid #b4c6ae;margin:15px 0;color:var(--green)}.chip{display:inline-block;background:var(--white);border:1px solid #bacbb5;padding:0 6px;border-radius:3px;font:14px/1.8 Consolas,monospace}.insight{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px}.essay{padding:22px 24px}.essay p{font-size:15px}.essay code{background:#eeefe5;padding:2px 5px;border-radius:3px;font:14px/1.7 Consolas,monospace}.essay ol{padding-left:21px;font-size:15px;line-height:1.9}.range-line{display:flex;gap:7px;align-items:center;margin:15px 0;flex-wrap:wrap}.range-box{border:1px solid #bacab8;background:#eef2e8;padding:8px 12px;font:18px Consolas,monospace}.range-box small{display:block;font:12px "Microsoft YaHei",sans-serif;color:var(--muted)}.warning{border-left:4px solid var(--red);background:#f9eee5;padding:14px 16px;font-size:14px}.compare-table td{white-space:normal;vertical-align:top}.compare-table code{white-space:nowrap}.counter{display:grid;grid-template-columns:1fr 1fr;gap:15px}.minirow{font:19px/1.7 Consolas,monospace;background:#f5f0e4;padding:8px 12px;margin:7px 0}.study{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.question{padding:22px}.question .qnum{font:italic 28px Georgia,serif;color:var(--green)}.question p{font-size:16px;margin:8px 0 16px}.question label{display:block;cursor:pointer;font-size:14px;padding:8px 10px;border:1px solid var(--line);margin:7px 0;border-radius:5px}.question label:has(input:checked){background:#e5eddc;border-color:#839f79}.question input{min-height:0;margin-right:7px;accent-color:var(--green)}.feedback{font-size:14px;color:var(--green);border-top:1px solid var(--line);padding-top:10px;margin-top:14px}.footer{margin-top:35px;border-top:1px solid #bdc9b7;padding-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:24px;font-size:12px;color:var(--muted)}.footer a{color:var(--green)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+@media(min-width:1600px){main{padding-top:35px}.scene{min-height:295px}.tile{min-height:110px}.value{font-size:34px}.code pre{font-size:16px}.code-block{padding-block:7px}.code-note{font-size:14px}.boundary{height:130px}}
+@media(max-width:1150px){.toolbar{padding:10px 18px;gap:8px}.brand{font-size:20px}main{padding:22px 20px}.lab,.detail-grid{grid-template-columns:minmax(0,1.1fr) minmax(360px,1fr)}.scene{padding:17px}.array{gap:5px}.value{font-size:25px}.code-block{grid-template-columns:minmax(0,1fr) 80px}.code pre{font-size:13px}.payload{font-size:11px}.code-note{font-size:11px}.stats .stat{padding-inline:8px}}
+@media(max-width:850px){.big .lab,.big .detail-grid{grid-template-columns:1fr}.lab,.detail-grid,.insight{grid-template-columns:1fr}.study{grid-template-columns:1fr}.code pre{font-size:14px}.code-block{grid-template-columns:minmax(0,1fr) 120px}.code-note{font-size:13px}.scene{min-height:250px}.footer{grid-template-columns:1fr}.counter{grid-template-columns:1fr}.array{min-width:520px}.array-wrap{overflow-x:auto;padding-bottom:5px}.toolbar{padding:9px 12px}.control{font-size:12px}.brand{font-size:18px}.controls{gap:5px}button{padding:5px 9px}select{max-width:195px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media print{.toolbar{position:static}.controls{display:none}.code{color:#203b36;background:#eef2e8}.code .board-head h3,.code .small,.code .code-note,.code .code-foot{color:#203b36}body{background:white}.board{break-inside:avoid}.study{grid-template-columns:1fr}main{max-width:none;padding:15px}}
+</style>
+</head>
+<body>
+<header class="toolbar">
+ <h1 class="brand">插入排序</h1>
+ <div class="controls">
+  <label class="control"><span>写法</span><select id="mode" aria-label="选择排序写法"><option value="prefix">原题② · 交换式插入</option><option value="shift">教材 · 暂存与后移</option><option value="suffix">参考答案另解 · 向右插入</option></select></label>
+  <button id="prev" title="键盘左方向键">上一步</button><button class="primary" id="next" title="键盘右方向键">下一轮</button><button id="reset">重新开始</button>
+  <button id="play">自动演示</button><label class="control"><span class="sr-only">演示速度</span><select id="speed" aria-label="演示速度"><option value="2600">慢速</option><option value="1500" selected>常速</option><option value="800">快速</option></select></label>
+  <label class="control"><span>跳转</span><select id="round" aria-label="跳转到某一轮"></select></label>
+  <button id="replay" title="连续观看当前一轮内的比较与移动">重播本轮动作</button><button id="large" aria-pressed="false">大字模式</button>
+ </div>
+</header>
+<main>
+ <section id="whole">
+  
+  <div class="lab">
+   <div class="board"><div class="board-head"><h3 id="stageTitle">起点：只有第 1 项属于有序区</h3><span class="stamp" id="stageCount">0 / 6 轮</span></div><div class="progress"><div id="progress"></div></div><div class="scene"><div class="legend"><span class="lg">已处理的有序区</span><span class="lk">本轮插入的记录</span><span>尚未处理</span></div><div class="small" id="dataNote"></div><div class="array-wrap" style="margin-top:14px"><div class="array" id="mainArray"></div></div><div class="bands" id="bands"></div><p class="thought" id="thought" aria-live="polite"></p></div><div class="stats" id="stats"></div></div>
+   <div class="board code"><div class="board-head"><h3 id="codeTitle">原题② · 交换式插入</h3><span class="small">{ 代码块作用 }</span></div><div class="code-body" id="code"></div><div class="code-foot" id="codeFoot"></div></div>
+  </div>
+  <div class="board ledger"><div class="ledger-title"><h3>每轮都留下来：有序区怎样从 1 项长到 n 项</h3><span class="small" id="ledgerNote">竖线左侧已处理；结果按轮累积</span></div><div class="table-scroll"><table><thead><tr><th>完成到哪轮</th><th>本轮插入谁</th><th>这一轮之后的序列（按第一项）</th><th>关键字比较</th><th id="opHead">交换</th></tr></thead><tbody id="history"></tbody></table></div></div>
+ </section>
+ <section id="zoom" style="margin-top:18px">
+  
+  <div class="detail-grid"><div class="board"><div class="board-head"><h3 id="detailTitle">先从顶部推进一轮</h3><span class="stamp" id="detailBadge">等待开始</span></div><div class="detail-body"><p class="detail-intro" id="detailIntro"></p><div id="keyTray" style="margin-bottom:12px"></div><p class="small">动作播放期间：绿色表示原有序区成员；金色表示新记录。连续有序区的边界在本轮完成后重新确认。</p><div class="array-wrap"><div class="array" id="detailArray"></div></div><p class="detail-expr" id="detailExpr" aria-live="polite"></p><ol class="event-list" id="events"></ol></div></div><aside class="explain-card" id="detailLesson"></aside></div>
+ </section>
+ <section id="exam" style="margin-top:18px">
+  
+  <div class="insight">
+   <article class="board essay"><div class="eyebrow">先有边界，再写 RANGE</div><h3>新记录在 i+1，下标 j 从 i 往 0 退</h3><p>第 <code>i+1</code> 轮开始前，<code>a[0:i+1]</code> 已经有序；新记录是 <code>a[i+1]</code>。第一次应比较新记录与左邻居，也就是 <code>a[i]</code> 和 <code>a[i+1]</code>。</p><div class="range-line"><code>range(</code><div class="range-box">i<small>从新记录左边开始</small></div><div class="range-box">-1<small>终点不包含，覆盖到 0</small></div><div class="range-box">-1<small>每次向左移动一格</small></div><code>)</code></div><p><strong>② 填：<code>i, -1, -1</code>。</strong>例如 i=3，j 依次可能取 3、2、1、0；每次比较 a[j] 与 a[j+1]，若无需交换则提前结束本轮。</p><ol><li>左边更大：交换两条<strong>完整记录</strong>，新记录向左走一格。</li><li>左边不大于它：新记录已经归位，<code>break</code>。</li><li>外层继续：再取下一条记录，重复插入过程。</li></ol><div class="warning"><strong>为什么这里允许 break？</strong>因为新记录左侧原本有序。遇到一个不大于新记录的左邻居，更左边的记录也不会更大。缺少这个前提，就不能在第一次“不交换”时停下。</div></article>
+   <article class="board essay"><div class="eyebrow">两个循环，各司其职</div><h3>break 结束“一轮”，没有结束“全部”</h3><table class="compare-table"><thead><tr><th>结构</th><th>负责什么</th></tr></thead><tbody><tr><td><code>for i in range(n-1)</code></td><td>让剩余 n−1 项依次加入有序区。</td></tr><tr><td><code>for j in range(i,-1,-1)</code></td><td>把本轮这一项送到应在的位置。</td></tr><tr><td><code>else: break</code></td><td>只退出内层 j 循环；还要进入外层下一轮。</td></tr><tr><td><code>return a</code></td><td>位于外层循环之后，所有轮次结束才返回。</td></tr></tbody></table><p style="margin-top:17px"><strong>原题特别适合观察“零交换轮”。</strong>第 2 轮插入 C=515，第 3 轮插入 D=522，第 5 轮插入 F=530，都只比较一次就 break。它们本来就在正确位置，有序区仍各增加 1 项。</p><p>原题交换次数依次为 <code>1, 0, 0, 2, 0, 3</code>，总共 6 次；关键字比较共 11 次；外层是 6 轮。这是三个不同的统计量。</p><p>两条 498 记录带有不同人数：A=[498,10]，E=[498,35]。相等时不交换，所以 A 仍在 E 前，排序保持<strong>稳定性</strong>。</p><div class="equation">单次插入 + 依次取下一项 = 完整的插入排序</div></article>
+  </div>
+  <div class="insight"><article class="board essay"><h3>教材里的“后移式”，和原题是什么关系？</h3><p>原题用相邻交换，让新记录一点点向左走。教材常先用 <code>key</code> 暂存新记录，把更大的左邻居依次向右挪，最后把 key 写进空位。</p><p><strong>它们每轮结束的记录顺序完全相同。</strong>顶部切换「教材 · 暂存与后移」，可以用同一组数据核对每一轮。图中的虚线空位是教学模型，表示该位置的旧记录已暂存在 key 中；代码运行时它仍可能保留旧值。</p><p>两种写法都依赖同一个条件：<strong>本轮开始时，左侧已经有序；本轮结束后，左侧连同新记录一起有序。</strong></p></article><article class="board essay"><h3>参考答案另解：也可以从右边长大</h3><p>参考答案还给出 <code>n-i-2, n-1</code>，即 <code>range(n-i-2,n-1)</code>。默认步长为 +1，新记录向右插入已经有序的后缀。</p><p>第 1 轮先把最后 1 项视为有序区，取倒数第 2 项向右插入；后续每轮再往左取一项。顶部切换「向右插入」即可观看。</p><div class="warning"><strong>两个方向不能混搭。</strong><br><code>range(n-i-2,-1,-1)</code> 并不是这个另解。它既没有逐轮扩展左侧有序区，也没有向右维护后缀，在原题数据上不能排完。</div></article></div>
+  <article class="board essay" style="margin-top:18px"><h3>用原题检查错误范围</h3><p>如果误填 <code>n-i-2,-1,-1</code>，原题数据最后只能得到 <code>[480,498,498,515,522,500,530]</code>，其中 500 仍在 522 后面，没有排完。循环方向必须与有序区的扩展方向一致。</p></article>
+ </section>
+ <section id="practice" style="margin-top:18px"><div class="study">
+  <article class="board question" data-q="0"><span class="qnum">01</span><p>原题第 2 轮插入 515，无需交换。此时该怎么做？</p><label><input type="radio" name="q0" value="0">整个排序已经完成，直接返回</label><label><input type="radio" name="q0" value="1">结束本轮，下一轮继续插入 522</label><div class="feedback">答案：继续下一轮。此时只有前 3 项被纳入有序区，右侧的 498 和 500 还没有处理。</div></article>
+  <article class="board question" data-q="1"><span class="qnum">02</span><p>原题第 6 轮插入 500，这一整轮结束后是什么？</p><label><input type="radio" name="q1" value="0">[480,498,498,500,515,522,530]</label><label><input type="radio" name="q1" value="1">[480,498,498,515,522,500,530]，交换一次就停</label><div class="feedback">答案：[480,498,498,500,515,522,530]。本轮只插入 500：依次越过 530、522、515，遇到 498 停止。</div></article>
+  <article class="board question" data-q="2"><span class="qnum">03</span><p>原题第 6 轮开始时，已经纳入有序区的有几项？下一项是谁？</p><label><input type="radio" name="q2" value="0">7 项，无需继续插入</label><label><input type="radio" name="q2" value="1">6 项，还要插入 500</label><div class="feedback">答案：6 项，还要插入 500。把最后一项插入后，有序区才扩大到全部 7 项。</div></article>
+ </div></section>
+ <footer class="footer"><div>依据：题库文件 202511-温州-高三-一模-15，第（2）题及对应原卷第 5 页、参考答案第 1 页。A–G 为本网页按原输入顺序附加的记录标记。教学只涉及排序，不演示车辆调度。<br>版本：2026-10-23 · 仅原题数据 · 单文件，可离线使用。</div><div>建议课堂顺序：先用原题走完 6 轮，观察 3 次“零交换轮”；再重播第 6 轮，观察 500 连续越过 530、522、515；最后推导②并切换教材写法。键盘 ← / → 可退回 / 推进一轮，空格播放或暂停。</div></footer>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const DATA={original:[[498,10],[480,25],[515,30],[522,35],[498,35],[530,15],[500,5]]};
+const records=raw=>raw.map((v,i)=>({id:String.fromCharCode(65+i),v:Array.isArray(v)?v[0]:v,p:Array.isArray(v)?v[1]:null}));
+const copy=a=>a.map(x=>x?{...x}:null);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function buildTrace(input,mode){
+ let a=copy(input),totalCompare=0,totalOp=0;const out=[{a:copy(a),completed:0,events:[],comp:0,ops:0,totalCompare:0,totalOp:0,key:null,i:null,k:null}];
+ for(let i=0;i<a.length-1;i++){
+  const suffix=mode==='suffix',k=suffix?a.length-i-2:i+1,key={...a[k]},before=copy(a),events=[];let comp=0,ops=0,j=suffix?k:k-1,stop='boundary';
+  const event=(kind,text,detail)=>events.push({kind,text,detail,a:copy(a),j,ops,comp});
+  if(mode==='shift'){
+   a[k]=null;event('take',`暂存 ${key.id}=${key.v}，留下一个待填位置。`,`key = a[${k}]；j = ${k-1}。虚线表示逻辑空位。`);
+   while(j>=0){
+    comp++;const left=a[j];
+    if(left.v>key.v){a[j+1]=left;a[j]=null;ops++;event('shift',`${left.v} > ${key.v} 为真；${left.id} 向右后移一格。`,`a[${j+1}] = a[${j}]；${left.id}：下标 ${j} → ${j+1}；空位移到 ${j}。`);j--;}
+    else{stop='compare';event('stop',`${left.v} > ${key.v} 为假；停止后移。`,`左邻居 ${left.id} 已经不大于 key，应该把 key 放在它后面。`);break;}
+   }
+   if(j<0)event('boundary',`已经检查到最左端，不能继续往左。`,'j = -1，while 的边界条件不成立；不读取 a[-1]。');
+   a[j+1]=key;event('place',`把 ${key.id}=${key.v} 写入下标 ${j+1}。`,`a[j+1] = key；本轮结束，有序区增加 1 项。`);
+  }else{
+   const inBounds=()=>suffix?j<a.length-1:j>=0;
+   while(inBounds()){
+    const l=a[j],r=a[j+1];comp++;
+    if(l.v>r.v){a[j]=r;a[j+1]=l;ops++;event('swap',`${l.v} > ${r.v} 为真；交换 ${l.id} 与 ${r.id}。`,`${l.id}：${j} → ${j+1}；${r.id}：${j+1} → ${j}。交换完整记录。`);j+=suffix?1:-1;}
+    else{stop='compare';event('stop',`${l.v} > ${r.v} 为假；执行 break。`,`j = ${j}。新记录 ${key.id} 已归位，只退出内层循环。`);break;}
+   }
+   if(stop==='boundary')event('boundary',suffix?'已经走到最右端，本轮结束。':'已经走到最左端，本轮结束。',suffix?'j 已遍历到 n−2，range 耗尽。':'j 已遍历到 0，range 耗尽；不再比较负下标。');
+  }
+  totalCompare+=comp;totalOp+=ops;
+  out.push({a:copy(a),before,completed:i+1,i,k,key,events,comp,ops,totalCompare,totalOp,stop,position:a.findIndex(x=>x.id===key.id)});
+ }
+ return out;
+}
+let mode='prefix',input=records(DATA.original),trace=[],pos=0,autoTimer=null,detailTimer=null,detailIndex=-1,animating=false;
+const isSuffix=()=>mode==='suffix';
+function orderedRange(completed){return isSuffix()?[input.length-completed-1,input.length-1]:[0,completed];}
+function renderArray(target,a,completed,keyId,animate=false,transient=false){
+ const old=new Map([...target.querySelectorAll('[data-id]')].map(e=>[e.dataset.id,e.getBoundingClientRect()]));
+ const [lo,hi]=orderedRange(completed);target.style.setProperty('--n',Math.max(a.length,1));
+ const oldMembers=transient?new Set(trace[pos].before.slice(lo,hi+1).map(r=>r.id)):null;
+ target.innerHTML=a.map((r,i)=>`<div class="slot"><div ${r?`data-id="${r.id}"`:''} class="tile ${(transient?r&&oldMembers.has(r.id):i>=lo&&i<=hi)?'ordered':''} ${r&&r.id===keyId?'key':''} ${r?'':'hole'}">${r?`<span class="tag">${r.id}</span><span class="value">${r.v}</span><span class="payload">${r.p===null?(r.id===keyId?'本轮插入':'关键字'):`${r.p} 人`}</span>`:'<span class="value">·</span><span class="payload">逻辑空位</span>'}</div><div class="idx">[${i}]</div>${!transient&&((!isSuffix()&&i===hi&&i<a.length-1)||(isSuffix()&&i===lo-1))?'<span class="boundary" aria-hidden="true"></span>':''}</div>`).join('');
+ if(animate&&!matchMedia('(prefers-reduced-motion: reduce)').matches){for(const e of target.querySelectorAll('[data-id]')){const b=old.get(e.dataset.id),n=e.getBoundingClientRect();if(b&&Math.abs(b.left-n.left)>1)e.animate([{transform:`translateX(${b.left-n.left}px)`,opacity:.65},{transform:'translateX(0)',opacity:1}],{duration:500,easing:'cubic-bezier(.2,.7,.2,1)'});}}
+}
+function codeBlock(text,note,active){return `<div class="code-block ${active?'active':''}"><pre>${text}</pre><div class="code-note"><span class="brace">}</span>${note}</div></div>`;}
+function renderCode(){
+ const s=trace[pos],started=pos>0,done=pos===trace.length-1;
+ $('codeTitle').textContent=mode==='shift'?'教材 · 暂存与后移（对照写法）':isSuffix()?'参考答案另解 · 向右插入':'原题② · 交换式插入';
+ if(mode==='shift'){
+  $('code').innerHTML=codeBlock('def insertion_sort(a):\n    n = len(a)','准备列表',!started)+codeBlock('    for i in range(1, n):\n        key = a[i]\n        j = i - 1','依次取新记录<br>暂存到 key',started)+codeBlock('        while j&gt;=0 and a[j][0]&gt;key[0]:\n            a[j + 1] = a[j]\n            j -= 1','把较大记录<br>依次向右后移',started)+codeBlock('        a[j + 1] = key','本轮落位<br>有序区加 1',started)+codeBlock('    return a','所有轮次结束',done);
+  $('codeFoot').innerHTML='这里 <strong>i 是新记录下标</strong>；原题里新记录下标是 i+1。代码处理二项记录；纯数字案例在演示内部使用统一的记录结构。';
+ }else{
+  const range=isSuffix()?'n - i - 2, n - 1':'i, -1, -1';
+  $('code').innerHTML=codeBlock('def bsort2(a):\n    n = len(a)','准备列表',!started)+codeBlock('    for i in range(n - 1):','依次处理<br>n−1 条新记录',started)+codeBlock(`        for j in range(<span class="answer">${range}</span>):\n            if a[j][0] &gt; a[j + 1][0]:\n                a[j],a[j+1]=a[j+1],a[j]\n            else:\n                break`,'一整次插入<br>比较、交换<br>找到位置就停',started)+codeBlock('    return a','所有轮次结束',done);
+  $('codeFoot').innerHTML=isSuffix()?'新记录下标为 <strong>n−i−2</strong>；j 向右走，已处理的有序后缀逐轮向左扩展。':'新记录下标为 <strong>i+1</strong>；j 向左走，已处理的有序前缀逐轮向右扩展。';
+ }
+}
+function sequenceHTML(a,completed){const [lo,hi]=orderedRange(completed);return a.map((r,i)=>`${i>0?(isSuffix()?i===lo:i===hi+1)?'<span class="wait-text"> | </span>':' · ':''}<span class="${i>=lo&&i<=hi?'ordered-text':'wait-text'}">${r.v}<small>${r.id}</small></span>`).join('');}
+function render(animate=false){
+ const s=trace[pos],n=input.length,done=pos===trace.length-1;
+ $('prev').disabled=pos===0;$('next').disabled=done;$('replay').disabled=pos===0;$('play').disabled=n<=1;
+ $('stageTitle').textContent=n===1?'只有 1 项：天然有序，不需要插入':pos===0?`起点：只有第 ${isSuffix()?n:1} 项属于有序区`:`第 ${pos} 轮结束：${s.key.id}=${s.key.v} 已插入`;
+ $('stageCount').textContent=`${pos} / ${n-1} 轮${done?' · 完成':''}`;$('progress').style.width=`${n<=1?100:pos/(n-1)*100}%`;$('round').value=String(pos);
+ $('dataNote').textContent='原题数据：每张卡是一条 [到达分钟数, 人数]；A–G 是输入顺序标记。';
+ renderArray($('mainArray'),s.a,pos,s.key?.id,animate);
+ const processed=pos+1,remaining=n-processed;
+ const orderedBand=`<div class="band" style="flex:${processed}">有序区 · ${processed} 项</div>`,waitBand=remaining?`<div class="band wait" style="flex:${remaining}">尚未处理 · ${remaining} 项</div>`:'';
+ $('bands').innerHTML=isSuffix()?waitBand+orderedBand:orderedBand+waitBand;
+ $('thought').innerHTML=pos===0?(n===1?'单个元素本身有序。<strong>外层 0 轮，比较 0 次，移动 0 次。</strong>':`接下来取 ${isSuffix()?'倒数第 2':'第 2'} 项插入。起初只承认 ${isSuffix()?'最右':'最左'}侧这 1 项为有序区。`):`${s.ops===0?'<strong>本轮零移动，也完成了插入。</strong>':`本轮${mode==='shift'?'后移':'交换'} ${s.ops} 次。`}有序区从 ${pos} 项增加到 <strong>${pos+1} 项</strong>。${done?'所有记录已纳入，整个排序才完成。':`下一轮还要取 ${s.a[isSuffix()?n-pos-2:pos+1].id}=${s.a[isSuffix()?n-pos-2:pos+1].v} 继续插入。`}`;
+ $('stats').innerHTML=[['已完成轮数',`${pos} / ${n-1}`],['有序区长度',`${processed} / ${n}`],['累计关键字比较',s.totalCompare],[mode==='shift'?'累计后移次数':'累计交换次数',s.totalOp]].map(([name,v])=>`<div class="stat"><b>${v}</b><span>${name}</span></div>`).join('');
+ $('ledgerNote').textContent=isSuffix()?'竖线右侧已处理；结果按轮累积':'竖线左侧已处理；结果按轮累积';$('opHead').textContent=mode==='shift'?'本轮后移':'本轮交换';
+ $('history').innerHTML=trace.map((r,t)=>`<tr class="${t===pos?'current':t>pos?'future':''}"><td>${t===0?'初始':`第 ${t} 轮`}${t===pos?' ◂':''}</td><td>${t===0?'—':t<=pos?`${r.key.id} = ${r.key.v}`:'尚未处理'}</td><td>${t<=pos?sequenceHTML(r.a,t):'等待这一轮完成'}</td><td>${t<=pos?r.comp:'—'}</td><td>${t<=pos?r.ops:'—'}</td></tr>`).join('');
+ renderCode();renderDetail();
+}
+function renderDetail(animate=false){
+ const s=trace[pos];
+ if(!pos){$('keyTray').innerHTML='';$('replay').textContent='重播本轮动作';$('detailTitle').textContent='先从顶部推进一轮';$('detailBadge').textContent='等待开始';$('detailIntro').textContent='每次「下一轮」执行完整的内层插入过程。完成后，这里会保留所有比较与移动的记录。';renderArray($('detailArray'),s.a,0,null);$('detailExpr').textContent='只有一个元素时，不需要与任何项比较。';$('events').innerHTML='';$('detailLesson').innerHTML='<h3>先承认一个很小的“有序”</h3><p>一个元素自己就有序。无需先把所有数据排好，才能进行插入。</p><div class="equation">第 1 项有序 → 前 2 项有序 → 前 3 项有序 → …</div><p>这里的“尚未处理”不表示它们一定乱序，只表示算法还没有把它们纳入已确认的有序区。</p>';return;}
+ $('detailTitle').textContent=`第 ${pos} 轮：只负责插入 ${s.key.id}=${s.key.v}`;
+ $('detailBadge').textContent=animating?'轮内动作播放中':detailIndex>=0?'本轮动作已暂停':'本轮动作已完整列出';$('replay').textContent=animating?'暂停本轮动作':detailIndex>=0?'继续本轮动作':'重播本轮动作';$('keyTray').innerHTML=mode==='shift'?`<span class="chip" style="background:var(--gold)">key = ${s.key.id} [${s.key.v}${s.key.p===null?'':', '+s.key.p}]</span> <span class="small">新记录暂存在这里，最后写回空位</span>`:'';
+ const range=isSuffix()?Array.from({length:input.length-s.k-1},(_,t)=>s.k+t):Array.from({length:s.k},(_,t)=>s.k-1-t);
+ $('detailIntro').innerHTML=`本轮开始时的有序区有 ${pos} 项；新记录下标 ${s.k}。${mode==='shift'?`先暂存 key，从 j=${s.k-1} 开始检查左邻居。`:`外层 i=${s.i}；内层 j 的候选取值：${range.join('、')}（遇 break 不再取后续值）。`}`;
+ const ev=detailIndex>=0?s.events[detailIndex]:null;
+ renderArray($('detailArray'),ev?ev.a:s.a,ev?pos-1:pos,s.key.id,animate,!!ev);
+ $('detailExpr').textContent=ev?ev.text:`本轮完成：${s.comp} 次关键字比较，${s.ops} 次${mode==='shift'?'后移':'交换'}，有序区增加 1 项。`;
+ $('events').innerHTML=s.events.map((e,i)=>`<li class="${i===detailIndex?'current-event':''}">${esc(e.text)}<small>${esc(e.detail)}</small></li>`).join('');
+ $('detailLesson').innerHTML=`<h3>本轮的边界与退出原因</h3><p><strong>处理谁：</strong>${s.key.id}=[${s.key.v}${s.key.p===null?'':', '+s.key.p}]；结束时位于下标 ${s.position}。</p><p><strong>比较范围：</strong>${isSuffix()?'只和右侧已排序的记录比较；不处理左边剩余项。':'只和左侧已排序的记录比较；不处理右边剩余项。'}</p><p><strong>本轮怎样停：</strong>${s.stop==='compare'?'遇到“不需要移动”的邻居，结束本轮。':'走到数组边界，循环自然结束。'}</p><div class="equation">${pos} 项有序 + 这一项 → ${pos+1} 项有序</div><p>${s.ops===0?'本轮不移动，是因为新记录原本就在应在的位置。它仍然被纳入了有序区。':mode==='shift'?'key 始终暂存新记录。其他较大记录后移，最后将 key 写回，避免覆盖丢失。':'每次交换，两条完整记录都还在；本轮的新记录不断走向自己的插入位置。'}</p><p><strong>计数口径：</strong>只统计关键字大小比较；不计 for/while 的边界判断。后移次数不包含最后一次 key 写回。</p>`;
+}
+function stopDetail(){if(detailTimer!==null)clearTimeout(detailTimer);detailTimer=null;animating=false;detailIndex=-1;$('replay').textContent='重播本轮动作';}
+function stopAuto(){if(autoTimer!==null)clearTimeout(autoTimer);autoTimer=null;$('play').textContent='自动演示';}
+function stopAll(){stopAuto();stopDetail();}
+function rebuild(){stopAll();trace=buildTrace(input,mode);pos=0;$('round').innerHTML=trace.map((r,i)=>`<option value="${i}">${i?`第 ${i} 轮结束`:'起点'}</option>`).join('');render();}
+function go(next,animate=false){stopAll();pos=Math.max(0,Math.min(trace.length-1,next));render(animate);}
+function animateRound(){
+ stopAuto();if(!pos)return;if(animating){clearTimeout(detailTimer);detailTimer=null;animating=false;renderDetail();return;}if(detailIndex<0){stopDetail();detailIndex=0;$('zoom').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}animating=true;renderDetail();
+ function tick(){detailTimer=setTimeout(()=>{if(detailIndex<trace[pos].events.length-1){detailIndex++;renderDetail(true);tick();}else{detailTimer=null;animating=false;detailIndex=-1;renderDetail();}},Number($('speed').value));}tick();
+}
+function togglePlay(){if(autoTimer!==null){stopAuto();return;}stopDetail();renderDetail();if(input.length<=1)return;if(pos===trace.length-1){pos=0;render();}$('play').textContent='暂停演示';autoTimer=setTimeout(function tick(){pos++;render(true);if(pos===trace.length-1){stopAuto();return;}autoTimer=setTimeout(tick,Number($('speed').value));},Number($('speed').value));}
+$('mode').addEventListener('change',()=>{mode=$('mode').value;rebuild();});$('prev').addEventListener('click',()=>go(pos-1,true));$('next').addEventListener('click',()=>go(pos+1,true));$('reset').addEventListener('click',()=>go(0));$('round').addEventListener('change',()=>go(Number($('round').value)));$('play').addEventListener('click',togglePlay);$('replay').addEventListener('click',animateRound);$('speed').addEventListener('change',()=>{stopAll();renderDetail();});$('large').addEventListener('click',()=>{stopAll();const active=document.body.classList.toggle('big');$('large').setAttribute('aria-pressed',String(active));render();});
+document.addEventListener('keydown',e=>{if(e.target.matches('input,select,textarea')||e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='ArrowLeft'){e.preventDefault();go(pos-1,true);}if(e.key==='ArrowRight'){e.preventDefault();go(pos+1,true);}if(e.code==='Space'&&!e.target.matches('button')){e.preventDefault();togglePlay();}});
+document.querySelectorAll('.question').forEach(q=>q.addEventListener('change',e=>{const answers=[1,0,1],correct=Number(e.target.value)===answers[Number(q.dataset.q)],feedback=q.querySelector('.feedback');if(!feedback.dataset.original)feedback.dataset.original=feedback.textContent;feedback.textContent=(correct?'判断正确。':'再看一遍有序区的边界。')+feedback.dataset.original;feedback.style.color=correct?'var(--green)':'var(--red)';}));
+new ResizeObserver(()=>document.documentElement.style.setProperty('--bar-height',document.querySelector('.toolbar').getBoundingClientRect().height+'px')).observe(document.querySelector('.toolbar'));window.addEventListener('pagehide',stopAll);rebuild();
+</script>
+</body>
+</html>
